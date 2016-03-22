@@ -1,2 +1,3 @@
 # gro-matic
 Arduino based Grow Controller
+Controll your Lights, Fan...
