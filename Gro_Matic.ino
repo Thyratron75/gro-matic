@@ -2004,240 +2004,13 @@
        }
        if (encoderPos == 1){
         lcd.clear();
-        screen = 15;
+        screen = 14;
        }
        } 
        }
 
- /*      else if (screen == 14)
-       {
-        Serial.print(wassertag);
-       if (encoderPos > 1){
-       encoderPos=1;
-       }
-       else if (encoderPos < 0){
-       lcd.clear();
-       encoderPos=0;       
-       }
-       if (wassertag == 0){
-       lcd.setCursor(0,0);
-       lcd.print("Sonntag");
-       lcd.setCursor(0,1);
-       lcd.print(F("Bew"));
-       lcd.print((char)0xE1);
-       lcd.print(F("ssern?"));
-       lcd.setCursor(0,2);
-       switch(encoderPos){
-       case 0:
-       lcd.print("nein");
-       break;
-       case 1:
-       lcd.print("ja  ");
-       break;
-       }
-       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-       {
-       if (encoderPos == 0){
-        so1 = 0;
-       }
-       if (encoderPos == 1){
-        so1 = 1;
-       }
-       EEPROM.update (addr20, so1);
-       wassertag ++;
-       wechslertGedrueckt = 0;
-       lcd.clear();
-       }
-       }
-        
-       if (wassertag == 1){
-       lcd.setCursor(0,0);
-       lcd.print("Montag");
-       lcd.setCursor(0,1);
-       lcd.print(F("Bew"));
-       lcd.print((char)0xE1);
-       lcd.print(F("ssern?"));
-       lcd.setCursor(0,2);
-       switch(encoderPos){
-       case 0:
-       lcd.print("nein");
-       break;
-       case 1:
-       lcd.print("ja  ");
-       break;
-       }
-       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-       {
-       if (encoderPos == 0){
-        mo1 = 0;
-       }
-       if (encoderPos == 1){
-        mo1 = 1;
-       }
-       EEPROM.update (addr21, mo1);
-       wassertag ++;
-       wechslertGedrueckt = 0;
-       lcd.clear();
-       }
-       }
 
-       if (wassertag == 2){
-       lcd.setCursor(0,0);
-       lcd.print(F("Dienstag"));
-       lcd.setCursor(0,1);
-       lcd.print(F("Bew"));
-       lcd.print((char)0xE1);
-       lcd.print(F("ssern?"));
-       lcd.setCursor(0,2);
-       switch(encoderPos){
-       case 0:
-       lcd.print("nein");
-       break;
-       case 1:
-       lcd.print("ja  ");
-       break;
-       }
-       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-       {
-       if (encoderPos == 0){
-        di1 = 0;
-       }
-       if (encoderPos == 1){
-        di1 = 1;
-       }
-       EEPROM.update (addr22, di1);
-       wassertag ++;
-       wechslertGedrueckt = 0;
-       lcd.clear();
-       }
-       }
-
-       if (wassertag == 3){
-       lcd.setCursor(0,0);
-       lcd.print(F("Mittwoch"));
-       lcd.setCursor(0,1);
-       lcd.print(F("Bew"));
-       lcd.print((char)0xE1);
-       lcd.print(F("ssern?"));
-       lcd.setCursor(0,2);
-       switch(encoderPos){
-       case 0:
-       lcd.print("nein");
-       break;
-       case 1:
-       lcd.print("ja  ");
-       break;
-       }
-       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-       {
-       if (encoderPos == 0){
-        mi1 = 0;
-       }
-       if (encoderPos == 1){
-        mi1 = 1;
-       }
-       EEPROM.update (addr23, mi1);
-       wassertag ++;
-       wechslertGedrueckt = 0;
-       lcd.clear();
-       }
-       }
-
-       if (wassertag == 4){
-       lcd.setCursor(0,0);
-       lcd.print(F("Donnerstag"));
-       lcd.setCursor(0,1);
-       lcd.print(F("Bew"));
-       lcd.print((char)0xE1);
-       lcd.print(F("ssern?"));
-       lcd.setCursor(0,2);
-       switch(encoderPos){
-       case 0:
-       lcd.print("nein");
-       break;
-       case 1:
-       lcd.print("ja  ");
-       break;
-       }
-       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-       {
-       if (encoderPos == 0){
-        do1 = 0;
-       }
-       if (encoderPos == 1){
-        do1 = 1;
-       }
-       EEPROM.update (addr24, do1);
-       wassertag ++;
-       wechslertGedrueckt = 0;
-       lcd.clear();
-       }
-       }
-
-       if (wassertag == 5){
-       lcd.setCursor(0,0);
-       lcd.print(F("Freitag"));
-       lcd.setCursor(0,1);
-       lcd.print(F("Bew"));
-       lcd.print((char)0xE1);
-       lcd.print(F("ssern?"));
-       lcd.setCursor(0,2);
-       switch(encoderPos){
-       case 0:
-       lcd.print("nein");
-       break;
-       case 1:
-       lcd.print("ja  ");
-       break;
-       }
-       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-       {
-       if (encoderPos == 0){
-        fr1 = 0;
-       }
-       if (encoderPos == 1){
-        fr1 = 1;
-       }
-       EEPROM.update (addr25, fr1);
-       wassertag ++;
-       wechslertGedrueckt = 0;
-       lcd.clear();
-       }
-       }
-
-       if (wassertag == 6){
-       lcd.setCursor(0,0);
-       lcd.print(F("Samstag"));
-       lcd.setCursor(0,1);
-       lcd.print(F("Bew"));
-       lcd.print((char)0xE1);
-       lcd.print(F("ssern?"));
-       lcd.setCursor(0,2);
-       switch(encoderPos){
-       case 0:
-       lcd.print("nein");
-       break;
-       case 1:
-       lcd.print("ja  ");
-       break;
-       }
-       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-       {
-       if (encoderPos == 0){
-        sa1 = 0;
-       }
-       if (encoderPos == 1){
-        sa1 = 1;
-       }
-       EEPROM.update (addr26, sa1);
-       screen = 15;
-       wechslertGedrueckt = 0;
-       lcd.clear();
-       }
-       }
-       }*/
-
-       else if (screen == 15)
+       else if (screen == 14)
        {
         if (encoderPos == 24){
         encoderPos=0;
@@ -2262,11 +2035,11 @@
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         EEPROM.update (addr18, startwasser);
         lcd.clear();
-        screen = 16;            
+        screen = 15;            
        }
          }
 
-        else if (screen == 16)
+        else if (screen == 15)
        {
          if (encoderPos == 60){
          encoderPos=0;
@@ -2291,11 +2064,11 @@
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         EEPROM.update (addr20, startwassermin);
         lcd.clear();
-        screen = 17;            
+        screen = 16;            
        }
          }
 
-         else if (screen == 17)
+         else if (screen == 16)
        {
          if (encoderPos == 60){
          encoderPos=0;
@@ -2320,11 +2093,11 @@
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         EEPROM.update (addr19, auswasser);
         lcd.clear();
-        screen = 18;            
+        screen = 17;            
        }
          }
 
-         else if (screen == 18){
+         else if (screen == 17){
          if (encoderPos == 60){
          encoderPos=0;
          }
@@ -2348,11 +2121,11 @@
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         EEPROM.update (addr27, sekauswasser);
         lcd.clear();
-        screen = 19;            
+        screen = 18;            
          }
        }  
 
-        else if (screen == 19){
+        else if (screen == 18){
           
           lcd.setCursor(0,0);
           lcd.print(F("Startzeit:"));
