@@ -1,3 +1,3 @@
 # gro-matic
-Arduino based Grow Controller
+Arduino based Grow Controller.
 Controll your Lights, Fan...
