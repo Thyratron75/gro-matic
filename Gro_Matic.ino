@@ -127,8 +127,8 @@
        
        //**************Anim Icons
        unsigned long previousMillis = 0;
-       long OnTime1 = 300;
-       long OnTime2 = 300;
+       unsigned long OnTime1 = 300;
+       unsigned long OnTime2 = 300;
        int ventiicon = LOW;
        
        //**************************************************************
