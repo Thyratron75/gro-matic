@@ -814,7 +814,7 @@
           digitalWrite(licht_relay_p, HIGH); //schaltet ndl Relais aus sollten sie noch an sein
       
        // Umluftventilator alle 15 minuten einschalten wenn licht an
-       if ((minute >= 15) && (minute <= 29) || (minute >= 45) && (minute <= 59))
+       if ( (minute >= 15 && minute <= 29 ) || (minute >= 45 && minute <= 59))
         {digitalWrite(ventilator, LOW);}
                 else 
                   {digitalWrite(ventilator, HIGH);}
@@ -823,7 +823,7 @@
 
        else
         {digitalWrite(lsr_relay_p, HIGH);
-          if ((hour >= grow_licht_aus & hour < grow_licht_an) || (hour >= bloom_licht_aus & hour <= bloom_licht_an))
+          if ( (hour >= grow_licht_aus) & (hour < grow_licht_an) || (hour >= bloom_licht_aus) & (hour <= bloom_licht_an))
             digitalWrite(licht_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
               if ((minute >= 15) && (minute <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
                 {digitalWrite(ventilator, LOW);}
@@ -845,7 +845,7 @@
             digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
 
        // Umluftventilator alle 15 minuten einschalten wenn licht an
-       if ((minute >= 15) && (minute <= 29) || (minute >= 45) && (minute <= 59))
+       if ( (minute >= 15 && minute <= 29 ) || (minute >= 45 && minute <= 59) )
         {digitalWrite(ventilator, LOW);}
              else 
                {digitalWrite(ventilator, HIGH);}
@@ -854,7 +854,7 @@
 
        else
          {digitalWrite(licht_relay_p, HIGH);
-           if ((hour >= lsr_aus & hour < lsr_an))
+           if ( (hour >= lsr_aus) & (hour < lsr_an) )
              digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein 
                if ((minute >= 15) && (minute <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
                  {digitalWrite(ventilator, LOW);}
@@ -874,7 +874,7 @@
         {digitalWrite(licht_relay_p, LOW); //schaltet ndl im Grow modus 18h licht um 5 Uhr an und um 22:59:59 Uhr aus
             digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
        // Umluftventilator alle 15 minuten einschalten wenn licht an
-       if ((minute >= 15) && (minute <= 29) || (minute >= 45) && (minute <= 59))
+       if ( (minute >= 15 &&  minute <= 29) || (minute >= 45 && minute <= 59) )
          {digitalWrite(ventilator, LOW);}
              else 
                {digitalWrite(ventilator, HIGH);}
@@ -898,7 +898,7 @@
             digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein 
 
        // Umluftventilator alle 15 minuten einschalten wenn licht an
-       if ((minute >= 15) && (minute <= 29) || (minute >= 45) && (minute <= 59))
+       if ( (minute >= 15 && minute <= 29 ) || (minute >= 45 && minute <= 59) )
          {digitalWrite(ventilator, LOW);}
              else 
                 {digitalWrite(ventilator, HIGH);}
@@ -908,7 +908,7 @@
 
        else
          {digitalWrite(licht_relay_p, HIGH);
-           if ((hour >= grow_licht_aus & hour < grow_licht_an) || (hour >= lsr_aus & hour < lsr_an))
+           if ( (hour >= grow_licht_aus) & (hour < grow_licht_an) || (hour >= lsr_aus) & (hour < lsr_an) )
              digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein 
                if ((minute >= 15) && (minute <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
                  {digitalWrite(ventilator, LOW);}
