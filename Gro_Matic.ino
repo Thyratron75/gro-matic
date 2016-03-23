@@ -91,7 +91,7 @@
        const int wechslertPin = A1;  // Pinnummer des Tasters für zum Lichtmodus wechseln und Eprom Reset
        int wechslertStatus = LOW;  // aktuelles Signal vom Eingangspin des Wechslertasters
        byte wechslertGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
-       int entprellZeit = 200;  // Zeit für Entprellung, anpassen!
+       unsigned int entprellZeit = 200;  // Zeit für Entprellung, anpassen!
        unsigned long wechslertZeit = 0;  // Zeit beim drücken des Tasters
        byte tage_reset = 0;
        //**************************************************************
