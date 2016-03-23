@@ -159,7 +159,7 @@
 
        //****************************BME 280 
        int ltitemp;
-       float ltirlf;
+       double ltirlf;
        int dsplrlf;
        Adafruit_BME280 bme; // I2C  
        long vorhermillis = millis();
@@ -189,9 +189,9 @@
        byte bloom_temp = 22;
 
        // RLF Werte für LTI, z.B. bei 40.00% RLF soll LTI in die hoechste Stufe geschaltet werden.
-       float lsr_rlf = 60.00;
-       float grow_rlf = 55.00;
-       float bloom_rlf = 40.00;
+       double lsr_rlf = 60.00;
+       double grow_rlf = 55.00;
+       double bloom_rlf = 40.00;
 
        // ab hier Zeit für die Belichtungsmodis einstellen
        byte lsr_an = 5;  // LSR um 5:00 Uhr einschalten
