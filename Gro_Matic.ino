@@ -91,34 +91,34 @@
        const int wechslertPin = A1;  // Pinnummer des Tasters für zum Lichtmodus wechseln und Eprom Reset
        int wechslertStatus = LOW;  // aktuelles Signal vom Eingangspin des Wechslertasters
        byte wechslertGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
-       int entprellZeit = 200;  // Zeit für Entprellung, anpassen!
+       unsigned int entprellZeit = 200;  // Zeit für Entprellung, anpassen!
        unsigned long wechslertZeit = 0;  // Zeit beim drücken des Tasters
        byte tage_reset = 0;
        //**************************************************************
        // Verschiedene Variablen
        byte speichern = 0;  // Setzt autosave auf aus, erst wenn Lichtmodus gewechselt wird, wird auch gespeichert
        byte daycounter_speichern = 0;
-       byte addr = 0;  // Eprom adresse zum Speichern des gewaehlten Lichtmodus einstellen
-       byte addr1 = 1; // Autobewasserung ein/aus abspeichern
-       byte addr2 = 2; // Eprom adresse zum Speichern des bloom Tage counters 
-       byte addr4 = 4; // Eprom adresse zum Speichern des Start Tages
-       byte addr5 = 5; // Eprom adresse zum Speichern des Start Monats
-       byte addr6 = 6; // Eprom addr zum Sp. d. Startzeit des LSR Modis
-       byte addr7 = 7; // Eprom addr zum Sp. d. Endzeit des LSR Modis
-       byte addr8 = 8; // Eprom addr zum Sp. d. Startzeit des Grow Modis
-       byte addr9 = 9; // Eprom addr zum Sp. d. Endzeit des Grow Modis
-       byte addr10 = 10; // Eprom addr zum Sp. d. Startzeit des Bloom Modis
-       byte addr11 = 11; // Eprom addr zum Sp. d. Endzeit des Bloom Modis
-       byte addr12 = 12; // Eprom addr zum Sp. d. Temp im LSR Modi
-       byte addr13 = 13; // Eprom addr zum Sp. d. Temp im Grow Modi
-       byte addr14 = 14; // Eprom addr zum Sp. d. Temp im Bloom Modi
-       byte addr15 = 15; // Eprom addr zum Sp. d. RLF im LSR Modi
-       byte addr16 = 16; // Eprom addr zum Sp. d. RLF im Grow Modi
-       byte addr17 = 17; // Eprom addr zum Sp. d. RLF im Bloom Modi    
-       byte addr18 = 18; // Eprom addr zum Sp. 
-       byte addr19 = 19; // Eprom addr zum Sp.
-       byte addr20 = 20; // Eprom addr zum Sp..
-       byte addr27 = 27;
+       const byte addr = 0;  // Eprom adresse zum Speichern des gewaehlten Lichtmodus einstellen
+       const byte addr1 = 1; // Autobewasserung ein/aus abspeichern
+       const byte addr2 = 2; // Eprom adresse zum Speichern des bloom Tage counters 
+       const byte addr4 = 4; // Eprom adresse zum Speichern des Start Tages
+       const byte addr5 = 5; // Eprom adresse zum Speichern des Start Monats
+       const byte addr6 = 6; // Eprom addr zum Sp. d. Startzeit des LSR Modis
+       const byte addr7 = 7; // Eprom addr zum Sp. d. Endzeit des LSR Modis
+       const byte addr8 = 8; // Eprom addr zum Sp. d. Startzeit des Grow Modis
+       const byte addr9 = 9; // Eprom addr zum Sp. d. Endzeit des Grow Modis
+       const byte addr10 = 10; // Eprom addr zum Sp. d. Startzeit des Bloom Modis
+       const byte addr11 = 11; // Eprom addr zum Sp. d. Endzeit des Bloom Modis
+       const byte addr12 = 12; // Eprom addr zum Sp. d. Temp im LSR Modi
+       const byte addr13 = 13; // Eprom addr zum Sp. d. Temp im Grow Modi
+       const byte addr14 = 14; // Eprom addr zum Sp. d. Temp im Bloom Modi
+       const byte addr15 = 15; // Eprom addr zum Sp. d. RLF im LSR Modi
+       const byte addr16 = 16; // Eprom addr zum Sp. d. RLF im Grow Modi
+       const byte addr17 = 17; // Eprom addr zum Sp. d. RLF im Bloom Modi    
+       const byte addr18 = 18; // Eprom addr zum Sp. 
+       const byte addr19 = 19; // Eprom addr zum Sp.
+       const byte addr20 = 20; // Eprom addr zum Sp..
+       const byte addr27 = 27;
        
        byte lichtmodus = 0;  // festlegen der verschiedenen Lichtprogramme, 0=LSR (Standart), 1, Grow, 2, Bloom
        byte relay_bloom_switching = 0;
@@ -127,8 +127,8 @@
        
        //**************Anim Icons
        unsigned long previousMillis = 0;
-       long OnTime1 = 300;
-       long OnTime2 = 300;
+       unsigned long OnTime1 = 300;
+       unsigned long OnTime2 = 300;
        int ventiicon = LOW;
        
        //**************************************************************
@@ -159,7 +159,7 @@
 
        //****************************BME 280 
        int ltitemp;
-       float ltirlf;
+       double ltirlf;
        int dsplrlf;
        Adafruit_BME280 bme; // I2C  
        long vorhermillis = millis();
@@ -189,9 +189,9 @@
        byte bloom_temp = 22;
 
        // RLF Werte für LTI, z.B. bei 40.00% RLF soll LTI in die hoechste Stufe geschaltet werden.
-       float lsr_rlf = 60.00;
-       float grow_rlf = 55.00;
-       float bloom_rlf = 40.00;
+       double lsr_rlf = 60.00;
+       double grow_rlf = 55.00;
+       double bloom_rlf = 40.00;
 
        // ab hier Zeit für die Belichtungsmodis einstellen
        byte lsr_an = 5;  // LSR um 5:00 Uhr einschalten
@@ -814,7 +814,7 @@
           digitalWrite(licht_relay_p, HIGH); //schaltet ndl Relais aus sollten sie noch an sein
       
        // Umluftventilator alle 15 minuten einschalten wenn licht an
-       if ((minute >= 15) && (minute <= 29) || (minute >= 45) && (minute <= 59))
+       if ( (minute >= 15 && minute <= 29 ) || (minute >= 45 && minute <= 59))
         {digitalWrite(ventilator, LOW);}
                 else 
                   {digitalWrite(ventilator, HIGH);}
@@ -823,7 +823,7 @@
 
        else
         {digitalWrite(lsr_relay_p, HIGH);
-          if ((hour >= grow_licht_aus & hour < grow_licht_an) || (hour >= bloom_licht_aus & hour <= bloom_licht_an))
+          if ( (hour >= grow_licht_aus) & (hour < grow_licht_an) || (hour >= bloom_licht_aus) & (hour <= bloom_licht_an))
             digitalWrite(licht_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
               if ((minute >= 15) && (minute <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
                 {digitalWrite(ventilator, LOW);}
@@ -845,7 +845,7 @@
             digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
 
        // Umluftventilator alle 15 minuten einschalten wenn licht an
-       if ((minute >= 15) && (minute <= 29) || (minute >= 45) && (minute <= 59))
+       if ( (minute >= 15 && minute <= 29 ) || (minute >= 45 && minute <= 59) )
         {digitalWrite(ventilator, LOW);}
              else 
                {digitalWrite(ventilator, HIGH);}
@@ -854,7 +854,7 @@
 
        else
          {digitalWrite(licht_relay_p, HIGH);
-           if ((hour >= lsr_aus & hour < lsr_an))
+           if ( (hour >= lsr_aus) & (hour < lsr_an) )
              digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein 
                if ((minute >= 15) && (minute <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
                  {digitalWrite(ventilator, LOW);}
@@ -874,7 +874,7 @@
         {digitalWrite(licht_relay_p, LOW); //schaltet ndl im Grow modus 18h licht um 5 Uhr an und um 22:59:59 Uhr aus
             digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
        // Umluftventilator alle 15 minuten einschalten wenn licht an
-       if ((minute >= 15) && (minute <= 29) || (minute >= 45) && (minute <= 59))
+       if ( (minute >= 15 &&  minute <= 29) || (minute >= 45 && minute <= 59) )
          {digitalWrite(ventilator, LOW);}
              else 
                {digitalWrite(ventilator, HIGH);}
@@ -898,7 +898,7 @@
             digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein 
 
        // Umluftventilator alle 15 minuten einschalten wenn licht an
-       if ((minute >= 15) && (minute <= 29) || (minute >= 45) && (minute <= 59))
+       if ( (minute >= 15 && minute <= 29 ) || (minute >= 45 && minute <= 59) )
          {digitalWrite(ventilator, LOW);}
              else 
                 {digitalWrite(ventilator, HIGH);}
@@ -908,7 +908,7 @@
 
        else
          {digitalWrite(licht_relay_p, HIGH);
-           if ((hour >= grow_licht_aus & hour < grow_licht_an) || (hour >= lsr_aus & hour < lsr_an))
+           if ( (hour >= grow_licht_aus) & (hour < grow_licht_an) || (hour >= lsr_aus) & (hour < lsr_an) )
              digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein 
                if ((minute >= 15) && (minute <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
                  {digitalWrite(ventilator, LOW);}
