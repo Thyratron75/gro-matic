@@ -58,55 +58,64 @@
               µ = 0xE4
 */
 
-#include "Wire.h"
-#include "LiquidCrystal_I2C.h"
-#include "DS3231.h"
-#include "EEPROM.h"
-#include "I2CSoilMoistureSensor.h"
-#include "Adafruit_Sensor.h"
-#include "Adafruit_BME280.h"
-#include "Time.h"
-#include "TimeAlarms.h"
+#include "Wire.h"                   // https://www.arduino.cc/en/Reference/Wire (included with Arduino IDE)
+#include "LiquidCrystal_I2C.h"      // https://github.com/fdebrabander/Arduino-LiquidCrystal-I2C-library
+#include "DS3231.h"                 // https://github.com/JChristensen/DS3232RTC
+#include "EEPROM.h"                 // https://www.arduino.cc/en/Reference/EEPROM
+#include "I2CSoilMoistureSensor.h"  // https://github.com/Miceuz/i2c-moisture-sensor
+#include "Adafruit_Sensor.h"        // https://github.com/adafruit/Adafruit_Sensor
+#include "Adafruit_BME280.h"        // https://github.com/adafruit/Adafruit_BME280_Library
+#include "Time.h"                   // https://github.com/PaulStoffregen/Time
+#include "TimeAlarms.h"             // https://www.pjrc.com/teensy/td_libs_TimeAlarms.html
 
-// Festlegen der verschiedenen Lichtprogramme, 0=LSR (Standart), 1, Grow, 2, Bloom
+/* Festlegen der verschiedenen Lichtprogramme, 0=LSR (Standart), 1, GROW, 2, BLOOM */
 #define LSR   0
 #define GROW  1
 #define BLOOM 2
 
-#define AUTOWASSER false
-
 /* Structure hält default einstellungen, Überschrieben on in EEPROM gespeicherter structure */
 struct setings_t {
 
-  byte lichtmodus = LSR;         // Speichern des gewaehlten Lichtmodus einstellen
-  bool autowasser = AUTOWASSER;  // Autobewasserung, on false = disabled
-  byte bloom_counter = 0;        // Speichern des bloom Tage counters.
+  byte MAGIG_NUMBER   = 'foooBaaaaaaaaaR';
 
-  byte starttag;         // Speichern des Start Tages
-  byte startmonat;       // Speichern des Start Monats
-  byte lsr_an;           // Startzeit des LSR Modis
-  byte lsr_aus;          // Endzeit des LSR Modis
-  byte grow_licht_an;    // Startzeit des Grow Modis
-  byte grow_licht_aus;   // Endzeit des Grow Modis
-  byte bloom_licht_an;   // Startzeit des Bloom Modis
-  byte bloom_licht_aus;  // Endzeit des Grow Modis
-  byte lsr_temp;         // Temp im LSR Modi
-  byte grow_temp;        // Temp im Grow Modi
-  byte bloom_temp;       // Temp im Bloom Modi
-  byte lsr_rlf;          // RLF im LSR Modi
-  byte grow_rlf;         // RLF im Grow Modi
-  byte bloom_rlf;        // RLF im Bloom Modi
-  byte startwasser;
-  byte auswasser;
-  byte startwassermin;
-  byte sekauswasser;
+  byte lichtmodus     = LSR;   // Speichern des gewaehlten Lichtmodus einstellen
+  bool autowasse      = false; // Autobewasserung, on false = disabled
+  
+  byte bloom_counter  = 0;    // Speichern des bloom Tage counters.
+  byte starttag       = 0;    // Speichern des Start Tages
+  byte startmonat     = 0;    // Speichern des Start Monats
 
-} setings_a, setings_b; // wenn sich structure a von b unterscheidet dann schreibe EEPROM neu.
+/* Ab hier Zeit für die Belichtungsmodis einstellen */
+  byte lsr_an           = 5;     // Startzeit des LSR Modis
+  byte lsr_aus          = 22;    // Endzeit des LSR Modis
+  byte grow_licht_an    = 5;     // Startzeit des Grow Modis
+  byte grow_licht_aus   = 22;    // Endzeit des Grow Modis
+  byte bloom_licht_an   = 5;     // Startzeit des Bloom Modis
+  byte bloom_licht_aus  = 16;    // Endzeit des Grow Modis
+ 
+/* Temperaturwerte für LTI, ab erreichen der Temperaturen in den verschiedenen Licht Modis soll LTI in die hoechste Stufe geschaltet werden. */
+  double lsr_temp   = 24.00; // Temp im LSR Modi
+  double grow_temp  = 23.00; // Temp im Grow Modi
+  double bloom_temp = 22.00; // Temp im Bloom Modi
+  
+/* RLF Werte für LTI, z.B. bei 40.00% RLF soll LTI in die hoechste Stufe geschaltet werden. */
+  double lsr_rlf    = 60.00;  // RLF im LSR Modi
+  double grow_rlf   = 55.00;  // RLF im Grow Modi
+  double bloom_rlf  = 40.00;  // RLF im Bloom Modi
+
+/* Autobewaesserung */
+  byte autowasser     = 0;
+  byte startwasser    = 7;
+  byte auswasser      = 5;
+  byte startwassermin = 0;
+  byte sekauswasser   = 0;
+
+} setings_a, setings_b; // wenn sich structure a von b unterscheidet dann schreibe EEPROM neu...
 
 #define DS3231_I2C_ADDRESS 0x68
 #define BACKLIGHT_PIN (3)
 #define LED_ADDR (0x27)  // might need to be 0x3F, if 0x27 doesn't work
-LiquidCrystal_I2C lcd(LED_ADDR, 2, 1, 0, 4, 5, 6, 7, BACKLIGHT_PIN, POSITIVE) ;
+LiquidCrystal_I2C lcd(LED_ADDR, 2, 1, 0, 4, 5, 6, 7, BACKLIGHT_PIN, POSITIVE);
 
 // GY-30 Lux Meter
 int BH1750_address = 0x23;  // I2C Addresse des GY-30
@@ -133,29 +142,7 @@ byte tage_reset = 0;
 // Verschiedene Variablen
 byte speichern = 0;  // Setzt autosave auf aus, erst wenn Lichtmodus gewechselt wird, wird auch gespeichert
 byte daycounter_speichern = 0;
-const byte addr = 0;  // Eprom adresse zum Speichern des gewaehlten Lichtmodus einstellen
-const byte addr1 = 1; // Autobewasserung ein/aus abspeichern
-const byte addr2 = 2; // Eprom adresse zum Speichern des bloom Tage counters
-const byte addr4 = 4; // Eprom adresse zum Speichern des Start Tages
-const byte addr5 = 5; // Eprom adresse zum Speichern des Start Monats
-const byte addr6 = 6; // Eprom addr zum Sp. d. Startzeit des LSR Modis
-const byte addr7 = 7; // Eprom addr zum Sp. d. Endzeit des LSR Modis
-const byte addr8 = 8; // Eprom addr zum Sp. d. Startzeit des Grow Modis
-const byte addr9 = 9; // Eprom addr zum Sp. d. Endzeit des Grow Modis
-const byte addr10 = 10; // Eprom addr zum Sp. d. Startzeit des Bloom Modis
-const byte addr11 = 11; // Eprom addr zum Sp. d. Endzeit des Bloom Modis
-const byte addr12 = 12; // Eprom addr zum Sp. d. Temp im LSR Modi
-const byte addr13 = 13; // Eprom addr zum Sp. d. Temp im Grow Modi
-const byte addr14 = 14; // Eprom addr zum Sp. d. Temp im Bloom Modi
-const byte addr15 = 15; // Eprom addr zum Sp. d. RLF im LSR Modi
-const byte addr16 = 16; // Eprom addr zum Sp. d. RLF im Grow Modi
-const byte addr17 = 17; // Eprom addr zum Sp. d. RLF im Bloom Modi
-const byte addr18 = 18; // Eprom addr zum Sp.
-const byte addr19 = 19; // Eprom addr zum Sp.
-const byte addr20 = 20; // Eprom addr zum Sp..
-const byte addr27 = 27;
 
-byte lichtmodus = 0;  // festlegen der verschiedenen Lichtprogramme, 0=LSR (Standart), 1, Grow, 2, Bloom
 byte relay_bloom_switching = 0;
 byte relay_grow_switching = 0;
 byte relay_lsr_switching = 0;
@@ -173,6 +160,7 @@ const int screenPin = 4;  // Pin für Taster zum umschalten der LCD seite
 int screenStatus = LOW;  // aktuelles Signal vom Eingangspin
 byte screenGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
 unsigned long screenZeit = 0;  // Zeit beim drücken des Tasters
+
 // Variablen für Starttag und bloomcounter
 byte letztertag = 0;
 byte letztermonat = 0;
@@ -191,14 +179,13 @@ byte settagderwoche = 1;
 byte setmonat = 3;
 byte setjahr = 16;
 
-
 //****************************BME 280
 int ltitemp;
 double ltirlf;
 int dsplrlf;
 Adafruit_BME280 bme; // I2C
-long vorhermillis = millis();
-long vorhermillislti = millis();
+unsigned long vorhermillis = millis();
+unsigned long vorhermillislti = millis();
 
 //****************************Encoder
 #define encoderPinA 2
@@ -213,45 +200,18 @@ byte temp_bereich = 0;
 byte rlf_bereich = 0;
 byte zeitstellen = 0;
 
-
 I2CSoilMoistureSensor bodensensor; // setze Var fuer Bodenfeuchtesensor (chirp)
 //*******************************************************************************
-// **************************** Ab hier die Usereingaben
-
-// Temperaturwerte für LTI, ab erreichen der Temperaturen in den verschiedenen Licht Modis soll LTI in die hoechste Stufe geschaltet werden.
-byte lsr_temp = 24;
-byte grow_temp = 23;
-byte bloom_temp = 22;
-
-// RLF Werte für LTI, z.B. bei 40.00% RLF soll LTI in die hoechste Stufe geschaltet werden.
-double lsr_rlf = 60.00;
-double grow_rlf = 55.00;
-double bloom_rlf = 40.00;
-
-// ab hier Zeit für die Belichtungsmodis einstellen
-byte lsr_an = 5;  // LSR um 5:00 Uhr einschalten
-byte lsr_aus = 22;  // LSR um 22:59:59 Uhr ausschalten
-byte grow_licht_an = 5;  // NDL im Grow-Modi um 5 Uhr einschalten
-byte grow_licht_aus = 22;  // NDL im Grow-Modi um 22:59:59 Uhr ausschalten
-byte bloom_licht_an = 5;  // NDL im Bloom-Modi um 5 Uhr einschalten
-byte bloom_licht_aus = 16;  // NDL im Bloom-Modi um 16:59:59 Uhr ausschalten
 
 DS3231 RTC;
 int tempC;
 
 //**************************** Bekanntmachung der Relais
-byte luft_relay = 9;  // luft_relay = LTI
-byte licht_relay_p = 7; // licht_relay = zur Steuerung des Hauptleuchtmittels
-byte lsr_relay_p = 6; // lsr_relay = zur Steuerung der LSR der Jungpflanzen
-byte ventilator = 5; // vetilator = zur steuerung des Relais Umluftventilators
-byte irrigation = 11; // wasser_relay = autobewaesserung
-
-//**************************** Autobewaesserung
-byte autowasser = 0;
-byte startwasser = 7;  // Autobewaesserung um 7 Uhr einschalten für 5 Min. sh. autobewaesserungs funktion
-byte startwassermin = 0;
-byte auswasser = 5;
-byte sekauswasser = 0;
+const byte luft_relay = 9;  // luft_relay = LTI
+const byte licht_relay_p = 7; // licht_relay = zur Steuerung des Hauptleuchtmittels
+const byte lsr_relay_p = 6; // lsr_relay = zur Steuerung der LSR der Jungpflanzen
+const byte ventilator = 5; // vetilator = zur steuerung des Relais Umluftventilators
+const byte irrigation = 11; // wasser_relay = autobewaesserung
 
 //**************************** GY-30 Luxmeter
 void BH1750_Init(int address) {
@@ -335,22 +295,23 @@ void displayTime() // anzeige der Zeit und Datum auf dem Display
     readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
 
     lcd.setCursor(0, 0);
+    
     if (hour < 10)
-    {
       lcd.print("0");
-    }
+ 
     lcd.print(hour, DEC);
+    
     lcd.print(":");
+    
     if (minute < 10)
-    {
       lcd.print("0");
-    }
+      
     lcd.print(minute, DEC);
+    
     lcd.print(":");
     if (second < 10)
-    {
       lcd.print("0");
-    }
+
     lcd.print(second, DEC);
     lcd.print(" ");
 
@@ -475,11 +436,11 @@ void LTI() // die Funtion des Rohrventilators
   // Pruefe im LSR oder Grow Modus Temperatur und RLF ist die Temp unter 24 Grad C oder unter RLF unter 55%
   // bleibt Stufentrafo gedimmt (z.B. 80V)
   // ist Temp oder gleich oder höher wird auf hoechste stufe (z.B. 190V) geschaltet.
-  if (lichtmodus == 0)
-  { if ( ltitemp < lsr_temp) {
+  if (setings_a.lichtmodus == LSR)
+  { if ( ltitemp < setings_a.lsr_temp) {
       digitalWrite(luft_relay, LOW);
     }
-    if (ltirlf < lsr_rlf) {
+    if (ltirlf < setings_a.lsr_rlf) {
       digitalWrite(luft_relay, LOW);
     }
     else {
@@ -489,11 +450,11 @@ void LTI() // die Funtion des Rohrventilators
   // Pruefe im LSR oder Grow Modus Temperatur und RLF ist die Temp unter 24 Grad C oder unter RLF unter 55%
   // bleibt Stufentrafo gedimmt (z.B. 80V)
   // ist Temp oder gleich oder höher wird auf hoechste stufe (z.B. 190V) geschaltet.
-  if (lichtmodus == 1)
-  { if (ltitemp < grow_temp) {
+  if (setings_a.lichtmodus == GROW)
+  { if (ltitemp < setings_a.grow_temp) {
       digitalWrite(luft_relay, LOW);
     }
-    if (ltirlf < grow_rlf) {
+    if (ltirlf < setings_a.grow_rlf) {
       digitalWrite(luft_relay, LOW);
     }
     else {
@@ -502,11 +463,11 @@ void LTI() // die Funtion des Rohrventilators
   }
 
   // Pruefe im Uebergangsmodus Grow>Bloom Temperatur und RLF
-  if (lichtmodus == 2)
-  { if (ltitemp < grow_temp) {
+  if (setings_a.lichtmodus == BLOOM)
+  { if (ltitemp < setings_a.grow_temp) {
       digitalWrite(luft_relay, LOW);
     }
-    if (ltirlf < grow_rlf) {
+    if (ltirlf < setings_a.grow_rlf) {
       digitalWrite(luft_relay, LOW);
     }
     else {
@@ -517,11 +478,11 @@ void LTI() // die Funtion des Rohrventilators
   // Pruefe im Bloom Modus Temperatur und RLF ist die Temp unter 22 Grad C oder unter RLF unter 40%
   // bleibt Stufentrafo gedimmt (z.B. 80V)
   // ist Temp oder RLF gleich oder höher wird auf hoechste stufe (z.B. 190V) geschaltet.
-  if (lichtmodus == 3)
-  { if (ltitemp < bloom_temp) {
+  if (setings_a.lichtmodus == 3)
+  { if (ltitemp < setings_a.bloom_temp) {
       digitalWrite(luft_relay, LOW);
     }
-    if (ltirlf < bloom_rlf) {
+    if (ltirlf < setings_a.bloom_rlf) {
       digitalWrite(luft_relay, LOW);
     }
     else {
@@ -680,8 +641,8 @@ void tagec()
 { relay_switching = digitalRead(licht_relay_p);
   if (relay_switching != last_relay_state) {
     if (relay_switching == LOW)
-      bloom_counter++;
-    EEPROM.update(addr2, bloom_counter);
+      setings_a.bloom_counter++;
+    //EEPROM.update(addr2, bloom_counter);
   }
   last_relay_state = relay_switching;
 }
@@ -720,12 +681,13 @@ void endzeitwassern() {
 }
 
 //**************************** das Setup
-void setup()
-{
-  Wire.begin();
+void setup() {
+
   Serial.begin(9600);
-  lcd.begin(20, 4);      // stelle LCD groesse ein
+  Wire.begin();
+  lcd.begin(20, 4); // stelle LCD groesse ein
   bme.begin();
+
   // Splashscreen
   lcd.setCursor(0, 0);
   lcd.print(F("..:: Gro-Matic ::.."));
@@ -766,27 +728,9 @@ void setup()
   digitalWrite(encoderPinB, HIGH);
   attachInterrupt(0, doEncoderA, CHANGE); // Encoder pin an interrupt 0 (pin 2)
   attachInterrupt(1, doEncoderB, CHANGE); // Encoder pin an interrupt 1 (pin 3)
-  lichtmodus = EEPROM.read(addr);  // Eprom auslesen
-  autowasser = EEPROM.read(addr1);
-  bloom_counter = EEPROM.read(addr2);
-  starttag = EEPROM.read(addr4);
-  startmonat = EEPROM.read(addr5);
-  lsr_an = EEPROM.read(addr6);
-  lsr_aus = EEPROM.read(addr7);
-  grow_licht_an = EEPROM.read(addr8);
-  grow_licht_aus = EEPROM.read(addr9);
-  bloom_licht_an = EEPROM.read(addr10);
-  bloom_licht_aus = EEPROM.read(addr11);
-  lsr_temp = EEPROM.read(addr12);
-  grow_temp = EEPROM.read(addr13);
-  bloom_temp = EEPROM.read(addr14);
-  lsr_rlf = EEPROM.read(addr15);
-  grow_rlf = EEPROM.read(addr16);
-  bloom_rlf = EEPROM.read(addr17);
-  startwasser = EEPROM.read(addr18);
-  auswasser = EEPROM.read(addr19);
-  startwassermin = EEPROM.read(addr20);
-  sekauswasser = EEPROM.read(addr27);
+
+  /* Read in setings struct */
+
 
 
   // erstelle die Custom character
@@ -799,11 +743,10 @@ void setup()
   lcd.createChar(7, venti_I);
   lcd.createChar(8, venti_II);
 
-  Alarm.alarmRepeat(startwasser, startwassermin, 0, startzeitwassern); // 8:30am every day
-  Alarm.alarmRepeat(startwasser, auswasser, sekauswasser, endzeitwassern); // 5:45pm every day
+//  Alarm.alarmRepeat(startwasser, startwassermin, 0, startzeitwassern); // 8:30am every day
+//  Alarm.alarmRepeat(startwasser, auswasser, sekauswasser, endzeitwassern); // 5:45pm every day
 
 }
-
 
 //**************************** der Loop
 void loop()
@@ -837,6 +780,9 @@ void loop()
   // Prüfe den Starttag und Monat die beim Start des Arduino gesetzt werden und Speichere wenn noetig oder,
   // wenn noch kein Starttag ins Eprom geschrieben wurde ab.
   // Ab hier die Tagezählerfunktion
+
+/* WTF
+
   if (starttag == 0 && startmonat == 0)
   { starttag = (letztertag);
     startmonat = (letztermonat);
@@ -848,7 +794,7 @@ void loop()
     letztermonat = EEPROM.read(addr5);
   }
 
-
+*/
 
   byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
   // hole daten von DS3231
@@ -857,14 +803,14 @@ void loop()
 
   //***********************************************
 
-  if (lichtmodus == 0)
+  if (setings_a.lichtmodus == 0)
   {
     byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
     // hole daten von DS3231
     readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
 
 
-    if ((hour >= lsr_an) && (hour < lsr_aus))
+    if ((hour >= setings_a.lsr_an) && (hour < setings_a.lsr_aus))
     { digitalWrite(lsr_relay_p, LOW); //schaltet lsr um 5 Uhr an und um 22:59:59 Uhr aus
       digitalWrite(licht_relay_p, HIGH); //schaltet ndl Relais aus sollten sie noch an sein
 
@@ -882,7 +828,7 @@ void loop()
 
     else
     { digitalWrite(lsr_relay_p, HIGH);
-      if ( (hour >= grow_licht_aus) & (hour < grow_licht_an) || (hour >= bloom_licht_aus) & (hour <= bloom_licht_an))
+      if ( (hour >= setings_a.grow_licht_aus) & (hour < setings_a.grow_licht_an) || (hour >= setings_a.bloom_licht_aus) & (hour <= setings_a.bloom_licht_an))
         digitalWrite(licht_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
       if ((minute >= 15) && (minute <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
       {
@@ -896,14 +842,14 @@ void loop()
 
   }
 
-  else if (lichtmodus == 1)
+  else if (setings_a.lichtmodus == 1)
   {
     byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
     // hole daten von DS3231
     readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
 
 
-    if ((hour >= grow_licht_an) && (hour < grow_licht_aus))
+    if ((hour >= setings_a.grow_licht_an) && (hour < setings_a.grow_licht_aus))
     { digitalWrite(licht_relay_p, LOW); //schaltet ndl im Grow modus 18h licht um 5 Uhr an und um 22:59:59 Uhr aus
       digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
 
@@ -921,7 +867,7 @@ void loop()
 
     else
     { digitalWrite(licht_relay_p, HIGH);
-      if ( (hour >= lsr_aus) & (hour < lsr_an) )
+      if ( (hour >= setings_a.lsr_aus) & (hour < setings_a.lsr_an) )
         digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
       if ((minute >= 15) && (minute <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
       {
@@ -935,13 +881,13 @@ void loop()
 
   }
 
-  else if (lichtmodus == 2)
+  else if (setings_a.lichtmodus == 2)
   {
     byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
     // hole daten von DS3231
     readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
 
-    if ((hour >= grow_licht_an) && (hour < grow_licht_aus))
+    if ((hour >= setings_a.grow_licht_an) && (hour < setings_a.grow_licht_aus))
     { digitalWrite(licht_relay_p, LOW); //schaltet ndl im Grow modus 18h licht um 5 Uhr an und um 22:59:59 Uhr aus
       digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
       // Umluftventilator alle 15 minuten einschalten wenn licht an
@@ -956,19 +902,19 @@ void loop()
     }
 
     else
-    { lichtmodus = 3;
+    { setings_a.lichtmodus = 3;
       speichern = 1;
     }
   }
 
-  else if (lichtmodus == 3)
+  else if (setings_a.lichtmodus == 3)
   {
     byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
     // hole daten von DS3231
     readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
     tagec();
 
-    if ((hour >= bloom_licht_an) && (hour < bloom_licht_aus))
+    if ((hour >= setings_a.bloom_licht_an) && (hour < setings_a.bloom_licht_aus))
     { digitalWrite(licht_relay_p, LOW); //schaltet ndl im Bloom modus 12h licht um 5 Uhr an und um 16:59:59 Uhr aus
       digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
 
@@ -987,7 +933,7 @@ void loop()
 
     else
     { digitalWrite(licht_relay_p, HIGH);
-      if ( (hour >= grow_licht_aus) & (hour < grow_licht_an) || (hour >= lsr_aus) & (hour < lsr_an) )
+      if ( (hour >= setings_a.grow_licht_aus) & (hour < setings_a.grow_licht_an) || (hour >= setings_a.lsr_aus) & (hour < setings_a.lsr_an) )
         digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
       if ((minute >= 15) && (minute <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
       {
@@ -1008,13 +954,10 @@ void loop()
 
 
 
-  if (autowasser == 1)
+  if (setings_a.autowasser == 1)
   {
 
   }
-
-
-
 
   // Autobewaesserung Ende
   //*********************************************************************************************
@@ -1064,8 +1007,8 @@ void loop()
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
     if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
     {
-      lichtmodus++;  // lichtmodus wird um +1 erhöht
-      EEPROM.update(addr, lichtmodus);
+      setings_a.lichtmodus++;  // lichtmodus wird um +1 erhöht
+//      EEPROM.update(addr, lichtmodus);
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
     }
 
@@ -1094,7 +1037,7 @@ void loop()
     //*************************************Programm-Modis**************************************
 
     // Wenn Lichtmodus 0 ist, starte im LSR modus
-    if (lichtmodus == 0)
+    if (setings_a.lichtmodus == 0)
     {
       lcd.setCursor(10, 3);
       lcd.print(F("  LSR Mode"));
@@ -1109,7 +1052,7 @@ void loop()
       }
     }
 
-    else if (lichtmodus == 1)
+    else if (setings_a.lichtmodus == 1)
     {
       lcd.setCursor(10, 3);
       lcd.print(F(" Grow Mode"));
@@ -1124,7 +1067,7 @@ void loop()
       }
     }
 
-    else if (lichtmodus == 2)
+    else if (setings_a.lichtmodus == 2)
     {
       lcd.setCursor(10, 3);
       lcd.print(F("Grow>Bloom"));
@@ -1138,7 +1081,7 @@ void loop()
         lcd.write(1);
       }
     }
-    else if (lichtmodus == 3)
+    else if (setings_a.lichtmodus == 3)
     {
       lcd.setCursor(10, 3);
       lcd.print(F("Bloom Mode"));
@@ -1157,7 +1100,7 @@ void loop()
     // Wenn der Lichtmodus auf 3 sprngt, setzte ihn wieder zurück auf 0 um von vorne zu beginnen
     else
     {
-      lichtmodus = 0;
+      setings_a.lichtmodus = 0;
     }
     // Lichtmodus Ende
 
@@ -1174,7 +1117,7 @@ void loop()
 
     if (tage_reset == 1) {
       for (int i = 0; i < 512; i++)
-        EEPROM.write(i, 0);
+//        EEPROM.write(i, 0);
       asm volatile ("jmp 0");
     }
     lcd.setCursor(0, 0);
@@ -1194,7 +1137,7 @@ void loop()
     lcd.print(F("Bl"));
     lcd.print((char)0xF5);
     lcd.print(F("tetag:"));
-    lcd.print(bloom_counter);
+    lcd.print(setings_a.bloom_counter);
     lcd.setCursor(0, 2);
     lcd.print(F("dr"));
     lcd.print((char)0xF5);
@@ -1211,16 +1154,16 @@ void loop()
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
     if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
     {
-      autowasser++;
-      EEPROM.update(addr1, autowasser);
+      setings_a.autowasser++;
+//      EEPROM.update(addr1, autowasser);
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
     }
 
     //*************************************Programm-Modis**************************************
 
     // Wenn Lichtmodus 0 ist, starte im LSR modus
-    if (autowasser == 0)
-    {
+    if (setings_a.autowasser == true) {
+      
       lcd.setCursor(0, 2);
       lcd.print(F("Autobew"));
       lcd.print((char)0xE1);
@@ -1228,10 +1171,9 @@ void loop()
       lcd.setCursor(0, 3);
       lcd.write(6);
       lcd.print(F(" aus"));
-    }
-
-    else if (autowasser == 1)
-    {
+      
+    } else if( setings_a.autowasser == false) {
+      
       lcd.setCursor(0, 2);
       lcd.print(F("Autobew"));
       lcd.print((char)0xE1);
@@ -1239,11 +1181,11 @@ void loop()
       lcd.setCursor(0, 3);
       lcd.write(5);
       lcd.print(F(" an "));
-    }
-
-    else
-    {
-      autowasser = 0;
+      
+    } else {
+      
+      setings_a.autowasser = true;
+      
     }
 
 
@@ -1269,21 +1211,21 @@ void loop()
     lcd.print(F("Schaltzeiten Licht"));
     lcd.setCursor(0, 1);
     lcd.print(F("LSR:  "));
-    lcd.print(lsr_an);
+    lcd.print(setings_a.lsr_an);
     lcd.print(F(":00-"));
-    lcd.print(lsr_aus);
+    lcd.print(setings_a.lsr_aus);
     lcd.print(F(":00 Uhr"));
     lcd.setCursor(0, 2);
     lcd.print(F("Grow: "));
-    lcd.print(grow_licht_an);
+    lcd.print(setings_a.grow_licht_an);
     lcd.print(F(":00-"));
-    lcd.print(grow_licht_aus);
+    lcd.print(setings_a.grow_licht_aus);
     lcd.print(F(":00 Uhr"));
     lcd.setCursor(0, 3);
     lcd.print(F("Bloom:"));
-    lcd.print(bloom_licht_an);
+    lcd.print(setings_a.bloom_licht_an);
     lcd.print(F(":00-"));
-    lcd.print(bloom_licht_aus);
+    lcd.print(setings_a.bloom_licht_aus);
     lcd.print(F(":00 Uhr"));
     if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
     {
@@ -1300,24 +1242,24 @@ void loop()
     lcd.print(F("eingest. LTI Werte"));
     lcd.setCursor(0, 1);
     lcd.print(F("LSR:  "));
-    lcd.print(lsr_temp);
+    lcd.print(setings_a.lsr_temp);
     lcd.print((char)223);
     lcd.print(F("C, :"));
-    lcd.print(lsr_rlf);
+    lcd.print(setings_a.lsr_rlf);
     lcd.print(F(" %"));
     lcd.setCursor(0, 2);
     lcd.print(F("Grow: "));
-    lcd.print(grow_temp);
+    lcd.print(setings_a.grow_temp);
     lcd.print((char)223);
     lcd.print(F("C, :"));
-    lcd.print(grow_rlf);
+    lcd.print(setings_a.grow_rlf);
     lcd.print(F(" %"));
     lcd.setCursor(0, 3);
     lcd.print(F("Bloom:"));
-    lcd.print(bloom_temp);
+    lcd.print(setings_a.bloom_temp);
     lcd.print((char)223);
     lcd.print(F("C, :"));
-    lcd.print(bloom_rlf);
+    lcd.print(setings_a.bloom_rlf);
     lcd.print(F(" %"));
     if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
     {
@@ -1371,9 +1313,9 @@ void loop()
 
       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
       {
-        lsr_an = encoderPos;
+        setings_a.lsr_an = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        EEPROM.update (addr6, lsr_an);
+//        EEPROM.update (addr6, lsr_an);
         lcd.clear();
         anaus++;
       }
@@ -1402,13 +1344,13 @@ void loop()
       {
         if (encoderPos == 0) {
           encoderPos = 23;
-          lsr_aus = encoderPos;
+          setings_a.lsr_aus = encoderPos;
         }
         else {
-          lsr_aus = encoderPos;
+          setings_a.lsr_aus = encoderPos;
         }
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        EEPROM.update (addr7, lsr_aus);
+//        EEPROM.update (addr7, lsr_aus);
         lcd.clear();
         anaus++;
       }
@@ -1435,9 +1377,9 @@ void loop()
       lcd.print(F("Dauer 18 Stunden"));
       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
       {
-        grow_licht_an = encoderPos;
+        setings_a.grow_licht_an = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        EEPROM.update (addr8, grow_licht_an);
+//        EEPROM.update (addr8, grow_licht_an);
         lcd.clear();
         anaus++;
       }
@@ -1465,13 +1407,13 @@ void loop()
       {
         if (encoderPos == 0) {
           encoderPos = 23;
-          grow_licht_aus = encoderPos;
+          setings_a.grow_licht_aus = encoderPos;
         }
         else {
-          grow_licht_aus = encoderPos;
+          setings_a.grow_licht_aus = encoderPos;
         }
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        EEPROM.update (addr9, grow_licht_aus);
+//        EEPROM.update (addr9, grow_licht_aus);
         lcd.clear();
         anaus++;
       }
@@ -1497,9 +1439,9 @@ void loop()
       lcd.print(F("Dauer 12 Stunden"));
       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
       {
-        bloom_licht_an = encoderPos;
+        setings_a.bloom_licht_an = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        EEPROM.update (addr10, bloom_licht_an);
+//        EEPROM.update (addr10, bloom_licht_an);
         lcd.clear();
         anaus++;
       }
@@ -1528,13 +1470,13 @@ void loop()
       {
         if (encoderPos == 0) {
           encoderPos = 23;
-          bloom_licht_aus = encoderPos;
+          setings_a.bloom_licht_aus = encoderPos;
         }
         else {
-          bloom_licht_aus = encoderPos;
+          setings_a.bloom_licht_aus = encoderPos;
         }
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        EEPROM.update (addr11, bloom_licht_aus);
+//        EEPROM.update (addr11, bloom_licht_aus);
         lcd.clear();
         delay (100);
         anaus = 0;
@@ -1575,9 +1517,9 @@ void loop()
       lcd.print(F("C"));
       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
       {
-        lsr_temp = encoderPos;
+        setings_a.lsr_temp = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        EEPROM.update (addr12, lsr_temp);
+//        EEPROM.update (addr12, lsr_temp);
         lcd.clear();
         temp_bereich++;
       }
@@ -1602,9 +1544,9 @@ void loop()
       lcd.print(F("C"));
       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
       {
-        grow_temp = encoderPos;
+        setings_a.grow_temp = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        EEPROM.update (addr13, grow_temp);
+//        EEPROM.update (addr13, grow_temp);
         lcd.clear();
         temp_bereich++;
       }
@@ -1629,9 +1571,9 @@ void loop()
       lcd.print(F("C"));
       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
       {
-        bloom_temp = encoderPos;
+        setings_a.bloom_temp = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        EEPROM.update (addr14, bloom_temp);
+//        EEPROM.update (addr14, bloom_temp);
         lcd.clear();
         screen = 9;
       }
@@ -1662,9 +1604,9 @@ void loop()
       lcd.print(F("zwischen 55 % - 60 %"));
       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
       {
-        lsr_rlf = (float) encoderPos;
+        setings_a.lsr_rlf = (double) encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        EEPROM.update (addr15, lsr_rlf);
+//        EEPROM.update (addr15, lsr_rlf);
         lcd.clear();
         rlf_bereich++;
       }
@@ -1682,9 +1624,9 @@ void loop()
       lcd.print(F("zwischen 50 % - 55 %"));
       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
       {
-        grow_rlf = (float) encoderPos;
+        setings_a.grow_rlf = (float) encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        EEPROM.update (addr16, grow_rlf);
+//        EEPROM.update (addr16, grow_rlf);
         lcd.clear();
         rlf_bereich++;
       }
@@ -1704,9 +1646,9 @@ void loop()
       lcd.print(F("40 % RLF"));
       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
       {
-        bloom_rlf = (float) encoderPos;
+        setings_a.bloom_rlf = (double) encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        EEPROM.update (addr17, bloom_rlf);
+//        EEPROM.update (addr17, bloom_rlf);
         lcd.clear();
         rlf_bereich++;
       }
@@ -2129,9 +2071,9 @@ void loop()
     lcd.print(F(" Uhr"));
     if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
     {
-      startwasser = encoderPos;
+      setings_a.startwasser = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-      EEPROM.update (addr18, startwasser);
+      //EEPROM.update (addr18, startwasser);
       lcd.clear();
       screen = 15;
     }
@@ -2158,9 +2100,9 @@ void loop()
     lcd.print(F(" Min."));
     if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
     {
-      startwassermin = encoderPos;
+      setings_a.startwassermin = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-      EEPROM.update (addr20, startwassermin);
+      //EEPROM.update (addr20, startwassermin);
       lcd.clear();
       screen = 16;
     }
@@ -2187,9 +2129,9 @@ void loop()
     lcd.print(F(" Min."));
     if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
     {
-      auswasser = encoderPos;
+      setings_a.auswasser = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-      EEPROM.update (addr19, auswasser);
+      //EEPROM.update (addr19, auswasser);
       lcd.clear();
       screen = 17;
     }
@@ -2215,9 +2157,9 @@ void loop()
     lcd.print(F(" Sek."));
     if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
     {
-      sekauswasser = encoderPos;
+      setings_a.sekauswasser = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-      EEPROM.update (addr27, sekauswasser);
+//      EEPROM.update (addr27, sekauswasser);
       lcd.clear();
       screen = 18;
     }
@@ -2228,38 +2170,38 @@ void loop()
     lcd.setCursor(0, 0);
     lcd.print(F("Startzeit:"));
     lcd.setCursor(0, 1);
-    if (startwasser < 10)
+    if (setings_a.startwasser < 10)
     {
       lcd.print("0");
     }
-    lcd.print(startwasser);
+    lcd.print(setings_a.startwasser);
     lcd.print(":");
-    if (startwassermin < 10)
+    if (setings_a.startwassermin < 10)
     {
       lcd.print("0");
     }
-    lcd.print(startwassermin);
+    lcd.print(setings_a.startwassermin);
     lcd.print(":00 Uhr");
     lcd.setCursor(0, 2);
     lcd.print(F("Ende:"));
     lcd.setCursor(0, 3);
-    if (startwasser < 10)
+    if (setings_a.startwasser < 10)
     {
       lcd.print("0");
     }
-    lcd.print(startwasser);
+    lcd.print(setings_a.startwasser);
     lcd.print(":");
-    if (auswasser < 10)
+    if (setings_a.auswasser < 10)
     {
       lcd.print("0");
     }
-    lcd.print(auswasser);
+    lcd.print(setings_a.auswasser);
     lcd.print(":");
-    if (sekauswasser < 10)
+    if (setings_a.sekauswasser < 10)
     {
       lcd.print("0");
     }
-    lcd.print(sekauswasser);
+    lcd.print(setings_a.sekauswasser);
 
     if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
     {
