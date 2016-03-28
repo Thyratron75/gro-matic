@@ -1,7 +1,7 @@
 /*
 
   FILE: gro-matic
-  AUTHOR: zrox, Galaktika
+  AUTHOR: zrox, Galaktika, Driverone
   VERSION: 0.9.9.8
 
   2004 I2C LCD
@@ -60,7 +60,7 @@
 
 #include "Wire.h"                   // https://www.arduino.cc/en/Reference/Wire (included with Arduino IDE)
 #include "LiquidCrystal_I2C.h"      // https://github.com/fdebrabander/Arduino-LiquidCrystal-I2C-library
-#include "DS3231.h"                 // https://github.com/JChristensen/DS3232RTC
+#include "DS3231.h"                 // https://github.com/bpg/DS3231
 #include "EEPROM.h"                 // https://www.arduino.cc/en/Reference/EEPROM
 #include "I2CSoilMoistureSensor.h"  // https://github.com/Miceuz/i2c-moisture-sensor
 #include "Adafruit_Sensor.h"        // https://github.com/adafruit/Adafruit_Sensor
@@ -73,10 +73,13 @@
 #define GROW  1
 #define BLOOM 2
 
+/* Change to Uptdate EEPROM to new DEFAULT settings, update the stuct after for change setings. */
+const uint32_t MAGIC_NUMBER = 0xAAEBCCDF;
+
 /* Structure hält default einstellungen, Überschrieben on in EEPROM gespeicherter structure */
 struct setings_t {
 
-  byte MAGIG_NUMBER   = 'foooBaaaaaaaaaR';
+  uint32_t MAGIC_NUMBER   = MAGIC_NUMBER;
 
   byte lichtmodus     = LSR;   // Speichern des gewaehlten Lichtmodus einstellen
   bool autowasse      = false; // Autobewasserung, on false = disabled
@@ -113,9 +116,10 @@ struct setings_t {
 } setings_a, setings_b; // wenn sich structure a von b unterscheidet dann schreibe EEPROM neu...
 
 #define DS3231_I2C_ADDRESS 0x68
+
 #define BACKLIGHT_PIN (3)
 #define LED_ADDR (0x27)  // might need to be 0x3F, if 0x27 doesn't work
-LiquidCrystal_I2C lcd(LED_ADDR, 2, 1, 0, 4, 5, 6, 7, BACKLIGHT_PIN, POSITIVE);
+LiquidCrystal_I2C lcd(LED_ADDR, 20, 4);
 
 // GY-30 Lux Meter
 int BH1750_address = 0x23;  // I2C Addresse des GY-30
@@ -680,12 +684,31 @@ void endzeitwassern() {
   digitalWrite(irrigation, HIGH);
 }
 
+void readEEPROM(){
+  /* Lese EEPROM structure in speicher*/
+  EEPROM.get(0, setings_a);
+
+  if( setings_a.MAGIC_NUMBER != MAGIC_NUMBER ){ // Vergleiche Magic number wenn ungleich schreibe EEPROM mit defaults neu.
+
+    setings_a = setings_b; // settings_a ist b (defaults)
+    EEPROM.put(0, setings_b); // Schreibe settings_b, enthält default einstellungen.
+
+  } else {
+
+    setings_b = setings_a; // settings_a ist valide.
+
+  }  
+}
+
 //**************************** das Setup
 void setup() {
 
   Serial.begin(9600);
+
+  readEEPROM();
+
   Wire.begin();
-  lcd.begin(20, 4); // stelle LCD groesse ein
+  lcd.begin(); // stelle LCD groesse ein
   bme.begin();
 
   // Splashscreen
@@ -728,10 +751,6 @@ void setup() {
   digitalWrite(encoderPinB, HIGH);
   attachInterrupt(0, doEncoderA, CHANGE); // Encoder pin an interrupt 0 (pin 2)
   attachInterrupt(1, doEncoderB, CHANGE); // Encoder pin an interrupt 1 (pin 3)
-
-  /* Read in setings struct */
-
-
 
   // erstelle die Custom character
   lcd.createChar(1, moon);
