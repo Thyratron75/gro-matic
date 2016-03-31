@@ -69,9 +69,7 @@
 #include "TimeAlarms.h"             // https://www.pjrc.com/teensy/td_libs_TimeAlarms.html
 
 /* Festlegen der verschiedenen Lichtprogramme, 0=LSR (Standart), 1, GROW, 2, BLOOM */
-#define LSR   0
-#define GROW  1
-#define BLOOM 2
+enum { LSR, GROW, BLOOM };
 
 /* Change to Uptdate EEPROM to new DEFAULT settings, update the stuct after for change setings. */
 const uint32_t MAGIC_NUMBER = 0xAAEBCCDF;
