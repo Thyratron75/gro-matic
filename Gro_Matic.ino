@@ -68,18 +68,18 @@
 #include "Time.h"                   // https://github.com/PaulStoffregen/Time
 #include "TimeAlarms.h"             // https://www.pjrc.com/teensy/td_libs_TimeAlarms.html
 
-/* Festlegen der verschiedenen Lichtprogramme, 0=LSR (Standart), 1, GROW, 2, BLOOM */
+/* Festlegen der verschiedenen Lichtprogramme */
 enum { LSR, GROW, BLOOM };
 
-/* Change to Uptdate EEPROM to new DEFAULT settings, update the stuct after for change setings. */
+/* Wenn MAGIC_NUMBER im EEPROM nicht übereinstimmt wird das EEPROM mit den default einstellungen neu geschreiben */
 const uint32_t MAGIC_NUMBER = 0xAAEBCCDF;
 
-/* Structure hält default einstellungen, Überschrieben on in EEPROM gespeicherter structure */
+/* Structure hält default einstellungen! diese werden von EEPROM überschrieben oder werden geschrieben falls noch nicht gesetzt */
 struct setings_t {
 
   uint32_t MAGIC_NUMBER   = MAGIC_NUMBER;
 
-  byte lichtmodus     = LSR;   // Speichern des gewaehlten Lichtmodus einstellen
+  byte lichtmodus     = LSR;   // Speichern des gewählten Lichtmodus einstellen (enumeration)
   bool autowasse      = false; // Autobewasserung, on false = disabled
   
   byte bloom_counter  = 0;    // Speichern des bloom Tage counters.
@@ -98,7 +98,7 @@ struct setings_t {
   double lsr_temp   = 24.00; // Temp im LSR Modi
   double grow_temp  = 23.00; // Temp im Grow Modi
   double bloom_temp = 22.00; // Temp im Bloom Modi
-  
+
 /* RLF Werte für LTI, z.B. bei 40.00% RLF soll LTI in die hoechste Stufe geschaltet werden. */
   double lsr_rlf    = 60.00;  // RLF im LSR Modi
   double grow_rlf   = 55.00;  // RLF im Grow Modi
@@ -111,7 +111,9 @@ struct setings_t {
   byte startwassermin = 0;
   byte sekauswasser   = 0;
 
-} setings_a, setings_b; // wenn sich structure a von b unterscheidet dann schreibe EEPROM neu...
+} setings_a, setings_b; // wenn sich structure a von b unterscheidet && write_EEPROM == true dann schreibe EEPROM neu...
+
+bool write_EEPROM = false;
 
 #define DS3231_I2C_ADDRESS 0x68
 
@@ -682,7 +684,9 @@ void endzeitwassern() {
   digitalWrite(irrigation, HIGH);
 }
 
+/* Lese EEPROM in setings oder schreibe defaults in EEPROM */
 void readEEPROM(){
+
   /* Lese EEPROM structure in speicher*/
   EEPROM.get(0, setings_a);
 
@@ -693,16 +697,16 @@ void readEEPROM(){
 
   } else {
 
-    setings_b = setings_a; // settings_a ist valide.
+    setings_b = setings_a; // Überschreibe default setings_b mit custom a
 
-  }  
+  }
 }
 
-//**************************** das Setup
 void setup() {
 
   Serial.begin(9600);
 
+  /* Lese EEPROM in setings oder schreibe defaults in EEPROM */
   readEEPROM();
 
   Wire.begin();
@@ -735,6 +739,7 @@ void setup() {
   digitalWrite(luft_relay, HIGH);
   digitalWrite(ventilator, HIGH);
   digitalWrite(irrigation, HIGH);
+
   pinMode(luft_relay,  OUTPUT);  // alle Relais Pins als ausgang setzen
   pinMode(licht_relay_p,  OUTPUT);
   pinMode(lsr_relay_p,  OUTPUT);
@@ -743,10 +748,13 @@ void setup() {
   pinMode(buttonPin, INPUT_PULLUP);  // den backlight Taster als Input setzen
   pinMode(wechslertPin, INPUT_PULLUP);  // Modus-Taster Pin wird als Eingang gesetzt
   pinMode(screenPin, INPUT_PULLUP);  // Modus-Taster Pin wird als Eingang gesetzt
+  
   pinMode(encoderPinA, INPUT);
-  pinMode(encoderPinB, INPUT); ;
+  pinMode(encoderPinB, INPUT);
+  
   digitalWrite(encoderPinA, HIGH);
   digitalWrite(encoderPinB, HIGH);
+  
   attachInterrupt(0, doEncoderA, CHANGE); // Encoder pin an interrupt 0 (pin 2)
   attachInterrupt(1, doEncoderB, CHANGE); // Encoder pin an interrupt 1 (pin 3)
 
@@ -778,19 +786,17 @@ void loop()
   rotating = true;  // reset the debouncer
 
   if (lastReportedPos != encoderPos)
-  {
-
     lastReportedPos = encoderPos;
-  }
 
   // ab hier Taster des Encoders
   wechslertStatus = digitalRead(wechslertPin);
 
   // Wenn der Wechseltaster gedrückt ist...
-  if (wechslertStatus == HIGH)
-  {
+  if (wechslertStatus == HIGH) {
+    
     wechslertZeit = millis();  // aktualisiere tasterZeit
     wechslertGedrueckt = 1;  // speichert, dass Taster gedrückt wurde
+    
   }
 
   //********************************************************************
@@ -816,7 +822,6 @@ void loop()
   byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
   // hole daten von DS3231
   readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
-
 
   //***********************************************
 
