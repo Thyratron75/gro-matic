@@ -168,8 +168,7 @@ unsigned long screenZeit = 0;  // Zeit beim drücken des Tasters
 // Variablen für Starttag und bloomcounter
 byte letztertag = 0;
 byte letztermonat = 0;
-byte starttag = 0;
-byte startmonat = 0;
+
 byte relay_switching = 0;
 byte last_relay_state = 0;
 byte bloom_counter = 0;
@@ -646,7 +645,7 @@ void tagec()
   if (relay_switching != last_relay_state) {
     if (relay_switching == LOW)
       setings_a.bloom_counter++;
-    //EEPROM.update(addr2, bloom_counter);
+      write_EEPROM = true;
   }
   last_relay_state = relay_switching;
 }
@@ -799,25 +798,6 @@ void loop()
     
   }
 
-  //********************************************************************
-  // Prüfe den Starttag und Monat die beim Start des Arduino gesetzt werden und Speichere wenn noetig oder,
-  // wenn noch kein Starttag ins Eprom geschrieben wurde ab.
-  // Ab hier die Tagezählerfunktion
-
-/* WTF
-
-  if (starttag == 0 && startmonat == 0)
-  { starttag = (letztertag);
-    startmonat = (letztermonat);
-    EEPROM.update (addr4, starttag);
-    EEPROM.update (addr5, startmonat);
-  }
-  else
-  { letztertag = EEPROM.read(addr4);
-    letztermonat = EEPROM.read(addr5);
-  }
-
-*/
 
   byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
   // hole daten von DS3231
@@ -1030,7 +1010,7 @@ void loop()
     if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
     {
       setings_a.lichtmodus++;  // lichtmodus wird um +1 erhöht
-//      EEPROM.update(addr, lichtmodus);
+      write_EEPROM = true;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
     }
 
@@ -1177,7 +1157,7 @@ void loop()
     if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
     {
       setings_a.autowasser++;
-//      EEPROM.update(addr1, autowasser);
+      write_EEPROM = true;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
     }
 
@@ -1337,7 +1317,7 @@ void loop()
       {
         setings_a.lsr_an = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-//        EEPROM.update (addr6, lsr_an);
+        write_EEPROM = true;
         lcd.clear();
         anaus++;
       }
@@ -1372,7 +1352,7 @@ void loop()
           setings_a.lsr_aus = encoderPos;
         }
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-//        EEPROM.update (addr7, lsr_aus);
+        write_EEPROM = true;
         lcd.clear();
         anaus++;
       }
@@ -1401,7 +1381,7 @@ void loop()
       {
         setings_a.grow_licht_an = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-//        EEPROM.update (addr8, grow_licht_an);
+        write_EEPROM = false;
         lcd.clear();
         anaus++;
       }
@@ -1435,7 +1415,7 @@ void loop()
           setings_a.grow_licht_aus = encoderPos;
         }
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-//        EEPROM.update (addr9, grow_licht_aus);
+        write_EEPROM = true;
         lcd.clear();
         anaus++;
       }
@@ -1463,7 +1443,7 @@ void loop()
       {
         setings_a.bloom_licht_an = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-//        EEPROM.update (addr10, bloom_licht_an);
+        write_EEPROM = true;
         lcd.clear();
         anaus++;
       }
@@ -1498,7 +1478,7 @@ void loop()
           setings_a.bloom_licht_aus = encoderPos;
         }
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-//        EEPROM.update (addr11, bloom_licht_aus);
+        write_EEPROM = true;
         lcd.clear();
         delay (100);
         anaus = 0;
@@ -1541,7 +1521,7 @@ void loop()
       {
         setings_a.lsr_temp = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-//        EEPROM.update (addr12, lsr_temp);
+        write_EEPROM = true;
         lcd.clear();
         temp_bereich++;
       }
@@ -1568,7 +1548,7 @@ void loop()
       {
         setings_a.grow_temp = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-//        EEPROM.update (addr13, grow_temp);
+        write_EEPROM = true;
         lcd.clear();
         temp_bereich++;
       }
@@ -1595,7 +1575,7 @@ void loop()
       {
         setings_a.bloom_temp = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-//        EEPROM.update (addr14, bloom_temp);
+        write_EEPROM = true;
         lcd.clear();
         screen = 9;
       }
@@ -1628,7 +1608,7 @@ void loop()
       {
         setings_a.lsr_rlf = (double) encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-//        EEPROM.update (addr15, lsr_rlf);
+        write_EEPROM = true;
         lcd.clear();
         rlf_bereich++;
       }
@@ -1648,7 +1628,7 @@ void loop()
       {
         setings_a.grow_rlf = (float) encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-//        EEPROM.update (addr16, grow_rlf);
+        write_EEPROM = true;
         lcd.clear();
         rlf_bereich++;
       }
@@ -1670,7 +1650,7 @@ void loop()
       {
         setings_a.bloom_rlf = (double) encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-//        EEPROM.update (addr17, bloom_rlf);
+        write_EEPROM = true;
         lcd.clear();
         rlf_bereich++;
       }
@@ -2095,7 +2075,7 @@ void loop()
     {
       setings_a.startwasser = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-      //EEPROM.update (addr18, startwasser);
+      write_EEPROM = true;
       lcd.clear();
       screen = 15;
     }
@@ -2124,7 +2104,7 @@ void loop()
     {
       setings_a.startwassermin = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-      //EEPROM.update (addr20, startwassermin);
+      write_EEPROM = true;
       lcd.clear();
       screen = 16;
     }
@@ -2153,7 +2133,7 @@ void loop()
     {
       setings_a.auswasser = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-      //EEPROM.update (addr19, auswasser);
+      write_EEPROM = true;
       lcd.clear();
       screen = 17;
     }
@@ -2181,7 +2161,7 @@ void loop()
     {
       setings_a.sekauswasser = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-//      EEPROM.update (addr27, sekauswasser);
+      write_EEPROM = true;
       lcd.clear();
       screen = 18;
     }
