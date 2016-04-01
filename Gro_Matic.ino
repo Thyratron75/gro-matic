@@ -652,7 +652,7 @@ void tagec()
 
 void doEncoderA()
 {
-  if ( rotating ) delay (1);  // debounce für Encoder Pin A
+  if ( rotating ) Alarm.delay(1);  // debounce für Encoder Pin A
   if ( digitalRead(encoderPinA) != A_set ) { // debounce erneut
     A_set = !A_set;
     // stelle counter + 1 im Uhrzeigersinn
@@ -664,7 +664,7 @@ void doEncoderA()
 
 
 void doEncoderB() {
-  if ( rotating ) delay (1);
+  if ( rotating ) Alarm.delay(1);
   if ( digitalRead(encoderPinB) != B_set ) {
     B_set = !B_set;
     //  stelle counter - 1 gegen Uhrzeigersinn
@@ -719,11 +719,11 @@ void setup() {
   lcd.print(F("  BME-280 Edition"));
   lcd.setCursor(0, 3);
   lcd.print(F(" V. 0.9.9.9 by zrox"));
-  delay (3000);
+  Alarm.delay(3000);
   lcd.clear();
 
   BH1750_Init(BH1750_address);
-  delay(500);
+  Alarm.delay(500);
 
   byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
   // hole daten von DS3231
@@ -1232,7 +1232,7 @@ void loop()
     if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
     {
       lcd.clear();
-      delay (50);
+      Alarm.delay(50);
       screen = 7;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
     }
@@ -1266,7 +1266,7 @@ void loop()
     if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
     {
       lcd.clear();
-      delay (200);
+      Alarm.delay(200);
       temp_bereich = 0;
       rlf_bereich = 0;
       screen = 8;
