@@ -59,7 +59,7 @@
 */
 
 #include "Wire.h"                   // https://www.arduino.cc/en/Reference/Wire (included with Arduino IDE)
-#include "LiquidCrystal_I2C.h"      // https://github.com/fdebrabander/Arduino-LiquidCrystal-I2C-library
+#include "LiquidCrystal_I2C.h"      // https://bitbucket.org/fmalpartida/new-liquidcrystal
 #include "DS3231.h"                 // https://github.com/bpg/DS3231
 #include "EEPROM.h"                 // https://www.arduino.cc/en/Reference/EEPROM
 #include "I2CSoilMoistureSensor.h"  // https://github.com/Miceuz/i2c-moisture-sensor
