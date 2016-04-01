@@ -2211,5 +2211,24 @@ void loop()
       asm volatile ("jmp 0");
     }
   }
+
+  updateEEPROM();
+
+}
+
+void updateEEPROM(){
+
+  if(write_EEPROM){
+
+    if(memcmp(&setings_a, &setings_b, sizeof setings_a) != 0){ // Do noting if noting to do
+
+      EEPROM.put(0, setings_a);
+      setings_b = setings_a;
+
+    }
+
+    write_EEPROM = false;
+
+  }
 }
 
