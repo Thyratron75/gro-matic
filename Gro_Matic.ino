@@ -116,10 +116,10 @@ struct setings_t {
 bool write_EEPROM = false;
 
 #define DS3231_I2C_ADDRESS 0x68
-
 #define BACKLIGHT_PIN (3)
 #define LED_ADDR (0x27)  // might need to be 0x3F, if 0x27 doesn't work
-LiquidCrystal_I2C lcd(LED_ADDR, 20, 4);
+
+LiquidCrystal_I2C lcd(LED_ADDR, 2, 1, 0, 4, 5, 6, 7, BACKLIGHT_PIN, POSITIVE) ;
 
 // GY-30 Lux Meter
 int BH1750_address = 0x23;  // I2C Addresse des GY-30
@@ -710,7 +710,7 @@ void setup() {
   readEEPROM();
 
   Wire.begin();
-  lcd.begin(); // stelle LCD groesse ein
+  lcd.begin(20, 4); // stelle LCD groesse ein
   bme.begin();
 
   // Splashscreen
