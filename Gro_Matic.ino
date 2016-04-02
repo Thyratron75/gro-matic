@@ -81,7 +81,7 @@ struct setings_t {
 
   byte lichtmodus     = LSR;   // Speichern des gewählten Lichtmodus einstellen (enumeration)
   bool autowasse      = false; // Autobewasserung, on false = disabled
-  
+
   byte bloom_counter  = 0;    // Speichern des bloom Tage counters.
   byte starttag       = 0;    // Speichern des Start Tages
   byte startmonat     = 0;    // Speichern des Start Monats
@@ -652,7 +652,7 @@ void tagec()
 
 void doEncoderA()
 {
-  if ( rotating ) Alarm.delay(1);  // debounce für Encoder Pin A
+  if ( rotating ) delay(1);  // debounce für Encoder Pin A
   if ( digitalRead(encoderPinA) != A_set ) { // debounce erneut
     A_set = !A_set;
     // stelle counter + 1 im Uhrzeigersinn
@@ -664,7 +664,7 @@ void doEncoderA()
 
 
 void doEncoderB() {
-  if ( rotating ) Alarm.delay(1);
+  if ( rotating ) delay(1);
   if ( digitalRead(encoderPinB) != B_set ) {
     B_set = !B_set;
     //  stelle counter - 1 gegen Uhrzeigersinn
@@ -1626,7 +1626,7 @@ void loop()
       lcd.print(F("zwischen 50 % - 55 %"));
       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
       {
-        setings_a.grow_rlf = (float) encoderPos;
+        setings_a.grow_rlf = (double) encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM = true;
         lcd.clear();
