@@ -1119,7 +1119,7 @@ void loop()
 
     if (tage_reset == 1) {
       for (int i = 0; i < 512; i++)
-//        EEPROM.write(i, 0);
+        EEPROM.write(i, 0);
       asm volatile ("jmp 0");
     }
     lcd.setCursor(0, 0);
