@@ -217,24 +217,30 @@ const byte ventilator = 5; // vetilator = zur steuerung des Relais Umluftventila
 const byte irrigation = 11; // wasser_relay = autobewaesserung
 
 //**************************** GY-30 Luxmeter
-void BH1750_Init(int address) {
+void BH1750_Init(int address){
 
   Wire.beginTransmission(address);
   Wire.write(0x10);  // 1 [lux] aufloesung
   Wire.endTransmission();
+
 }
 
 byte BH1750_Read(int address) {
 
   byte i = 0;
+  
   Wire.beginTransmission(address);
   Wire.requestFrom(address, 2);
+  
   while (Wire.available()) {
     buff[i] = Wire.read();
     i++;
   }
+  
   Wire.endTransmission();
+
   return i;
+
 }
 
 char sendeInhalt = ' ';
@@ -252,18 +258,13 @@ byte bcdToDec(byte val)
   return ( (val / 16 * 10) + (val % 16) );
 }
 
-void readDS3231time(byte *second,
-                    byte *minute,
-                    byte *hour,
-                    byte *dayOfWeek,
-                    byte *dayOfMonth,
-                    byte *month,
-                    byte *year)
-{
+void readDS3231time(byte *second, byte *minute, byte *hour, byte *dayOfWeek, byte *dayOfMonth, byte *month, byte *year){
+  
   Wire.beginTransmission(DS3231_I2C_ADDRESS);
   Wire.write(0);        // setze DS3231 register pointer zu 00h
   Wire.endTransmission();
   Wire.requestFrom(DS3231_I2C_ADDRESS, 7);
+  
   *second = bcdToDec(Wire.read() & 0x7f);
   *minute = bcdToDec(Wire.read());
   *hour = bcdToDec(Wire.read() & 0x3f);
@@ -271,11 +272,11 @@ void readDS3231time(byte *second,
   *dayOfMonth = bcdToDec(Wire.read());
   *month = bcdToDec(Wire.read());
   *year = bcdToDec(Wire.read());
+
 }
 
-void setDS3231time(byte second, byte minute, byte hour, byte dayOfWeek, byte
-                   dayOfMonth, byte month, byte year)
-{
+void setDS3231time(byte second, byte minute, byte hour, byte dayOfWeek, byte dayOfMonth, byte month, byte year){
+  
   // sets time and date data to DS3231
   Wire.beginTransmission(DS3231_I2C_ADDRESS);
   Wire.write(0); // set next input to start at the seconds register
@@ -287,12 +288,14 @@ void setDS3231time(byte second, byte minute, byte hour, byte dayOfWeek, byte
   Wire.write(decToBcd(month)); // set month
   Wire.write(decToBcd(year)); // set year (0 to 99)
   Wire.endTransmission();
+
 }
 
 //****************************hier gehen die einzelnen Funktionen los
 
-void displayTime() // anzeige der Zeit und Datum auf dem Display
-{ if (hintergrund == 1) {
+void displayTime(){ // anzeige der Zeit und Datum auf dem Display
+  
+  if (hintergrund == 1) {
     byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
     // hole daten von DS3231
     readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
@@ -318,30 +321,9 @@ void displayTime() // anzeige der Zeit und Datum auf dem Display
     lcd.print(second, DEC);
     lcd.print(" ");
 
-    switch (dayOfWeek) {
-      case 1:
-        lcd.print("So");
-        break;
-      case 2:
-        lcd.print("Mo");
-        break;
-      case 3:
-        lcd.print("Di");
-        break;
-      case 4:
-        lcd.print("Mi");
-        break;
-      case 5:
-        lcd.print("Do");
-        break;
-      case 6:
-        lcd.print("Fr");
-        break;
-      case 7:
-        lcd.print("Sa");
-        break;
-    }
-
+    char c_dayOfWeek[7][4]={"So","Mo","Di","Mi","Do","Fr","Sa"};
+    lcd.print(c_dayOfWeek[dayOfWeek]);
+    
     lcd.print(" ");
     if (dayOfMonth < 10)
     {
@@ -349,45 +331,11 @@ void displayTime() // anzeige der Zeit und Datum auf dem Display
     }
     lcd.print(dayOfMonth, DEC);
     lcd.print(" ");
-    switch (month) {
-      case 1:
-        lcd.print("Jan");
-        break;
-      case 2:
-        lcd.print("Feb");
-        break;
-      case 3:
-        lcd.print("Mar");
-        break;
-      case 4:
-        lcd.print("Apr");
-        break;
-      case 5:
-        lcd.print("Mai");
-        break;
-      case 6:
-        lcd.print("Jun");
-        break;
-      case 7:
-        lcd.print("Jul");
-        break;
-      case 8:
-        lcd.print("Aug");
-        break;
-      case 9:
-        lcd.print("Sep");
-        break;
-      case 10:
-        lcd.print("Okt");
-        break;
-      case 11:
-        lcd.print("Nov");
-        break;
-      case 12:
-        lcd.print("Dez");
-        break;
-    }
-  }
+ 
+    char C_Mounth[12][5]={"Jan","Feb","Mar","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Mov","Dec"};
+    lcd.print(C_Mounth[month]);
+
+  }  
 }
 
 void bme280() // Anzeige der Temp und RLF auf dem Display
