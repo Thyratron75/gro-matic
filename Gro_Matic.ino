@@ -321,7 +321,7 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
     lcd.print(second, DEC);
     lcd.print(" ");
 
-    char c_dayOfWeek[7][4]={"So","Mo","Di","Mi","Do","Fr","Sa"};
+    const char c_dayOfWeek[7][3]={ "So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
     lcd.print(c_dayOfWeek[dayOfWeek]);
     
     lcd.print(" ");
@@ -332,7 +332,7 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
     lcd.print(dayOfMonth, DEC);
     lcd.print(" ");
  
-    char C_Mounth[12][5]={"Jan","Feb","Mar","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Mov","Dec"};
+    const char C_Mounth[12][4]={ "Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Mov", "Dec"};
     lcd.print(C_Mounth[month]);
 
   }  
