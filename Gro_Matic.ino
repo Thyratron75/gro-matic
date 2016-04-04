@@ -335,7 +335,7 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
     const char C_Mounth[12][4]={ "Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Mov", "Dec"};
     lcd.print(C_Mounth[month]);
 
-  }  
+  }
 }
 
 void bme280() // Anzeige der Temp und RLF auf dem Display
@@ -499,93 +499,14 @@ void displaybeleuchtung() // hier wird das Display ein und ausgeschaltet
 }
 
 // Custom Caracter
-byte moon[8] = {
-  0b00000,
-  0b01110,
-  0b10101,
-  0b11111,
-  0b10001,
-  0b01110,
-  0b00000,
-  0b00000
-};
-
-byte sun[8] = {
-  0b00000,
-  0b00100,
-  0b10101,
-  0b01110,
-  0b01110,
-  0b10101,
-  0b00100,
-  0b00000
-};
-
-byte thermo[8] = {
-  0b00100,
-  0b01010,
-  0b01010,
-  0b01110,
-  0b01110,
-  0b11111,
-  0b11111,
-  0b01110
-};
-
-byte rlf[8] = {
-  0b00100,
-  0b00100,
-  0b01110,
-  0b01110,
-  0b11111,
-  0b11001,
-  0b11111,
-  0b01110
-};
-
-byte water_on[8] = {
-  0b11100,
-  0b01000,
-  0b11110,
-  0b11111,
-  0b00011,
-  0b00011,
-  0b00000,
-  0b00011
-};
-
-byte water_off[8] = {
-  0b11100,
-  0b01000,
-  0b11100,
-  0b11110,
-  0b00011,
-  0b00011,
-  0b00000,
-  0b00000
-};
-
-byte venti_I[8] = {
-  0b00100,
-  0b01010,
-  0b00000,
-  0b00100,
-  0b10001,
-  0b11011,
-  0b00000,
-  0b00000
-};
-
-byte venti_II[8] = {
-  0b00000,
-  0b11011,
-  0b10001,
-  0b00100,
-  0b00000,
-  0b01010,
-  0b00100,
-  0b00000
-};
+byte moon[8]      = { 0b00000, 0b01110, 0b10101, 0b11111, 0b10001, 0b01110, 0b00000, 0b00000 };
+byte sun[8]       = { 0b00000, 0b00100, 0b10101, 0b01110, 0b01110, 0b10101, 0b00100, 0b00000 };
+byte thermo[8]    = { 0b00100, 0b01010, 0b01010, 0b01110, 0b01110, 0b11111, 0b11111, 0b01110 };
+byte rlf[8]       = { 0b00100, 0b00100, 0b01110, 0b01110, 0b11111, 0b11001, 0b11111, 0b01110 };
+byte water_on[8]  = { 0b11100, 0b01000, 0b11110, 0b11111, 0b00011, 0b00011, 0b00000, 0b00011 };
+byte water_off[8] = { 0b11100, 0b01000, 0b11100, 0b11110, 0b00011, 0b00011, 0b00000, 0b00000 };
+byte venti_I[8]   = { 0b00100, 0b01010, 0b00000, 0b00100, 0b10001, 0b11011, 0b00000, 0b00000 };
+byte venti_II[8]  = { 0b00000, 0b11011, 0b10001, 0b00100, 0b00000, 0b01010, 0b00100, 0b00000 };
 
 void tagec()
 // bluete Tagecounter
