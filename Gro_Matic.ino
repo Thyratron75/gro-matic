@@ -1602,29 +1602,9 @@ void loop(){
       lcd.setCursor(0, 0);
       lcd.print(F("Tag der Woche"));
       lcd.setCursor(0, 1);
-      switch (encoderPos) {
-        case 1:
-          lcd.print("Sonntag   ");
-          break;
-        case 2:
-          lcd.print("Montag    ");
-          break;
-        case 3:
-          lcd.print("Dienstag  ");
-          break;
-        case 4:
-          lcd.print("Mittwoch  ");
-          break;
-        case 5:
-          lcd.print("Donnerstag");
-          break;
-        case 6:
-          lcd.print("Freitag   ");
-          break;
-        case 7:
-          lcd.print("Samstag   ");
-          break;
-      }
+      
+      const char c_dayOfWeek[7][11]={ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"};
+      lcd.print(c_dayOfWeek[encoderPos]);
 
       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
       {
@@ -1717,59 +1697,42 @@ void loop(){
     }
 
     if (zeitstellen == 6) {
+      
       lcd.setCursor(0, 0);
-      switch (settagderwoche) {
-        case 1:
-          lcd.print("Sonntag");
-          break;
-        case 2:
-          lcd.print("Montag");
-          break;
-        case 3:
-          lcd.print("Dienstag");
-          break;
-        case 4:
-          lcd.print("Mittwoch");
-          break;
-        case 5:
-          lcd.print("Donnerstag");
-          break;
-        case 6:
-          lcd.print("Freitag");
-          break;
-        case 7:
-          lcd.print("Samstag");
-          break;
-      }
+
+      const char c_dayOfWeek[7][11]={ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"};
+      lcd.print(c_dayOfWeek[settagderwoche]);
+      
       lcd.setCursor(0, 1);
+      
       if (setstunde < 10)
-      {
         lcd.print("0");
-      }
+
       lcd.print(setstunde);
       lcd.print(F(":"));
+      
       if (setminute < 10)
-      {
         lcd.print("0");
-      }
+
       lcd.print(setminute);
+      
       lcd.print(F(":"));
       if (setsekunde < 10)
-      {
         lcd.print("0");
-      }
+
       lcd.print(setsekunde);
       lcd.print(F(" "));
+      
       if (settag < 10)
-      {
         lcd.print("0");
-      }
+
       lcd.print(settag);
+
       lcd.print(F("."));
+      
       if (setmonat < 10)
-      {
         lcd.print("0");
-      }
+        
       lcd.print(setmonat);
       lcd.print(F("."));
       lcd.print(2000 + setjahr);
