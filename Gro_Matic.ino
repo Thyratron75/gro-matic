@@ -118,7 +118,7 @@ bool write_EEPROM = false;
 #define BACKLIGHT_PIN (3)
 #define LED_ADDR (0x27)  // might need to be 0x3F, if 0x27 doesn't work
 
-LiquidCrystal_I2C lcd(LED_ADDR, 2, 1, 0, 4, 5, 6, 7, BACKLIGHT_PIN, POSITIVE) ;
+LiquidCrystal_I2C lcd(LED_ADDR, 2, 1, 0, 4, 5, 6, 7, BACKLIGHT_PIN, POSITIVE);
 
 // GY-30 Lux Meter
 #define BH1750_address 0x23  // I2C Addresse des GY-30
@@ -126,19 +126,18 @@ LiquidCrystal_I2C lcd(LED_ADDR, 2, 1, 0, 4, 5, 6, 7, BACKLIGHT_PIN, POSITIVE) ;
 //Backlight button
 #define buttonPin 10
 
-//**************************************************************
 //Displayfunktionen
 byte lcdbereinigen = 0;  // dispaly Clear funktion
 byte hintergrund = 1;    // schalte dispaly an menue
-//**************************************************************
-//Programm modus und resert Taster
+
+//Programm modus und reset Taster
 #define wechslertPin A1  // Pinnummer des Tasters für zum Lichtmodus wechseln und Eprom Reset
 int wechslertStatus = LOW;  // aktuelles Signal vom Eingangspin des Wechslertasters
 byte wechslertGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
 unsigned int entprellZeit = 200;  // Zeit für Entprellung, anpassen!
 unsigned long wechslertZeit = 0;  // Zeit beim drücken des Tasters
 byte tage_reset = 0;
-//**************************************************************
+
 // Verschiedene Variablen
 byte speichern = 0;  // Setzt autosave auf aus, erst wenn Lichtmodus gewechselt wird, wird auch gespeichert
 byte daycounter_speichern = 0;
@@ -147,7 +146,6 @@ byte relay_bloom_switching = 0;
 byte relay_grow_switching = 0;
 byte relay_lsr_switching = 0;
 
-//**************************************************************
 // Ab hier LCD menue fuehrung und taster
 byte screen = 1;
 #define screenPin 4  // Pin für Taster zum umschalten der LCD seite
@@ -158,12 +156,9 @@ unsigned long screenZeit = 0;  // Zeit beim drücken des Tasters
 // Variablen für Starttag und bloomcounter
 byte letztertag = 0;
 byte letztermonat = 0;
-
-byte relay_switching = 0;
-byte last_relay_state = 0;
 byte bloom_counter = 0;
 
-//****************************Variablen zum einstellen der RTC
+// Variablen zum einstellen der RTC
 byte setsekunde = 0;
 byte setminute = 1;
 byte setstunde = 1;
@@ -172,13 +167,13 @@ byte settagderwoche = 1;
 byte setmonat = 3;
 byte setjahr = 16;
 
-//****************************BME 280
+// BME 280
 int ltitemp;
 double ltirlf;
 int dsplrlf;
 Adafruit_BME280 bme; // I2C
 
-//****************************Encoder
+// Encoder
 #define encoderPinA 2
 #define encoderPinB 3
 volatile unsigned int encoderPos = 0;  // Encoder counter
@@ -193,14 +188,14 @@ byte zeitstellen = 0;
 
 I2CSoilMoistureSensor bodensensor; // setze Var fuer Bodenfeuchtesensor (chirp)
 
-//**************************** Bekanntmachung der Relais
+// Bekanntmachung der Relais
 #define luft_relay    9   // luft_relay = LTI
 #define licht_relay_p 7   // licht_relay = zur Steuerung des Hauptleuchtmittels
 #define lsr_relay_p   6   // lsr_relay = zur Steuerung der LSR der Jungpflanzen
 #define ventilator    5   // vetilator = zur steuerung des Relais Umluftventilators
 #define irrigation    11  // wasser_relay = autobewaesserung
 
-//**************************** GY-30 Luxmeter
+// GY-30 Luxmeter
 void BH1750_Init(int address){
 
   Wire.beginTransmission(address);
@@ -209,16 +204,18 @@ void BH1750_Init(int address){
 
 }
 
-byte BH1750_Read(int address, byte *buff) {
+byte BH1750_Read(int address, byte *buff){
 
   byte i = 0;
 
   Wire.beginTransmission(address);
   Wire.requestFrom(address, 2);
   
-  while (Wire.available()) {
+  while(Wire.available()){
+    
     buff[i] = Wire.read();
     i++;
+
   }
   
   Wire.endTransmission();
@@ -231,24 +228,25 @@ byte BH1750_Read(int address, byte *buff) {
 
 void displayTime(){ // anzeige der Zeit und Datum auf dem Display
   
-  if (hintergrund == 1) {
+  if(hintergrund == 1){
 
     lcd.setCursor(0, 0);
     
-    if (hour() < 10)
+    if(hour() < 10)
       lcd.print("0");
  
     lcd.print(hour(), DEC);
     
     lcd.print(":");
     
-    if (minute() < 10)
+    if(minute() < 10)
       lcd.print("0");
       
     lcd.print(minute(), DEC);
     
     lcd.print(":");
-    if (second() < 10)
+    
+    if(second() < 10)
       lcd.print("0");
 
     lcd.print(second(), DEC);
@@ -258,10 +256,10 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
     lcd.print(c_dayOfWeek[weekday()]);
     
     lcd.print(" ");
-    if (day() < 10)
-    {
+    
+    if(day() < 10)
       lcd.print("0");
-    }
+
     lcd.print(day(), DEC);
     lcd.print(" ");
  
@@ -269,15 +267,17 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
     lcd.print(C_Mounth[month()]);
 
   }
+
 }
 
 void bme280(){ // Anzeige der Temp und RLF auf dem Display
 
-  if (hintergrund == 1){
+  if(hintergrund == 1){
 
     static unsigned long m;
   
-    if (millis() - m > 3000) {
+    if(millis() - m > 3000){
+      
       m = millis();
       ltitemp = bme.readTemperature();
       dsplrlf = bme.readHumidity();
@@ -296,12 +296,14 @@ void bme280(){ // Anzeige der Temp und RLF auf dem Display
       lcd.print(F("%"));
       lcd.print(F("   "));
     }
+    
   }
+  
 }
 
 void DS3231temp(){  // hole und zeige auf dem Display die Case Temperatur der RTC
 
-  if (hintergrund == 1) {
+  if(hintergrund == 1){
 
     lcd.setCursor(0, 3);
     lcd.print(F("Case:"));
@@ -317,90 +319,124 @@ void LTI(){ // die Funtion des Rohrventilators
 
   static unsigned long m;
 
-  if (millis() - m > 10000)
-  {
+  if(millis() - m > 10000){
+    
     m = millis();
     ltitemp = bme.readTemperature();
     ltirlf = bme.readHumidity();
+    
   }
+  
   // Pruefe im LSR oder Grow Modus Temperatur und RLF ist die Temp unter 24 Grad C oder unter RLF unter 55%
   // bleibt Stufentrafo gedimmt (z.B. 80V)
   // ist Temp oder gleich oder höher wird auf hoechste stufe (z.B. 190V) geschaltet.
-  if (setings_a.lichtmodus == LSR)
-  { if ( ltitemp < setings_a.lsr_temp) {
+  
+  if(setings_a.lichtmodus == LSR){ 
+    
+    if(ltitemp < setings_a.lsr_temp)
       digitalWrite(luft_relay, LOW);
-    }
-    if (ltirlf < setings_a.lsr_rlf) {
+
+    if(ltirlf < setings_a.lsr_rlf){
+      
       digitalWrite(luft_relay, LOW);
-    }
-    else {
+    
+    } else {
+    
       digitalWrite(luft_relay, HIGH);
+    
     }
+  
   }
+  
   // Pruefe im LSR oder Grow Modus Temperatur und RLF ist die Temp unter 24 Grad C oder unter RLF unter 55%
   // bleibt Stufentrafo gedimmt (z.B. 80V)
   // ist Temp oder gleich oder höher wird auf hoechste stufe (z.B. 190V) geschaltet.
-  if (setings_a.lichtmodus == GROW)
-  { if (ltitemp < setings_a.grow_temp) {
+  if(setings_a.lichtmodus == GROW){ 
+    
+    if(ltitemp < setings_a.grow_temp)
       digitalWrite(luft_relay, LOW);
-    }
-    if (ltirlf < setings_a.grow_rlf) {
+    
+    if(ltirlf < setings_a.grow_rlf){
+      
       digitalWrite(luft_relay, LOW);
-    }
-    else {
+      
+    } else {
+      
       digitalWrite(luft_relay, HIGH);
+    
     }
+  
   }
 
   // Pruefe im Uebergangsmodus Grow>Bloom Temperatur und RLF
-  if (setings_a.lichtmodus == BLOOM)
-  { if (ltitemp < setings_a.grow_temp) {
+  if(setings_a.lichtmodus == BLOOM){
+    
+    if(ltitemp < setings_a.grow_temp)
       digitalWrite(luft_relay, LOW);
-    }
-    if (ltirlf < setings_a.grow_rlf) {
+    
+    if(ltirlf < setings_a.grow_rlf){
+      
       digitalWrite(luft_relay, LOW);
-    }
-    else {
+      
+    } else {
+      
       digitalWrite(luft_relay, HIGH);
+    
     }
+  
   }
 
   // Pruefe im Bloom Modus Temperatur und RLF ist die Temp unter 22 Grad C oder unter RLF unter 40%
   // bleibt Stufentrafo gedimmt (z.B. 80V)
   // ist Temp oder RLF gleich oder höher wird auf hoechste stufe (z.B. 190V) geschaltet.
-  if (setings_a.lichtmodus == 3)
-  { if (ltitemp < setings_a.bloom_temp) {
+  if(setings_a.lichtmodus == 3){
+    
+    if(ltitemp < setings_a.bloom_temp)
       digitalWrite(luft_relay, LOW);
-    }
-    if (ltirlf < setings_a.bloom_rlf) {
+ 
+    if(ltirlf < setings_a.bloom_rlf){
+      
       digitalWrite(luft_relay, LOW);
-    }
-    else {
+      
+    } else {
+      
       digitalWrite(luft_relay, HIGH);
+      
     }
+    
   }
+  
 }
-void gy30() // Luxmeter
-{ if (hintergrund == 1) {
+
+void gy30(){ // Luxmeter
+  
+if(hintergrund == 1){
 
     byte buff[2];
-
     float valf = 0;
-    if (BH1750_Read(BH1750_address, buff) == 2) {
+    
+    if(BH1750_Read(BH1750_address, buff) == 2){
+      
+      valf = ((buff[0] << 8) | buff[1]);
 
-      {
-        valf = ((buff[0] << 8) | buff[1]);
+      lcd.setCursor(0, 2);
+      lcd.print(F("LUX: "));
+      
+      if(valf < 1000)
+        lcd.print(" ");
+      
+      if(valf < 100)
+        lcd.print(" ");
+      
+      if(valf < 10)
+        lcd.print(" ");
 
-        lcd.setCursor(0, 2);
-        lcd.print(F("LUX: "));
-        if (valf < 1000) lcd.print(" ");
-        if (valf < 100) lcd.print(" ");
-        if (valf < 10) lcd.print(" ");
-
-        lcd.print(valf, 2);
-      }
+      lcd.print(valf, 2);
+     
     }
+    
   }
+  
 }
 
 void displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
@@ -442,6 +478,7 @@ void displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
     hintergrund = 1;
 
   }
+  
 }
 
 // Custom Caracter
@@ -454,15 +491,22 @@ byte water_off[8] = { 0b11100, 0b01000, 0b11100, 0b11110, 0b00011, 0b00011, 0b00
 byte venti_I[8]   = { 0b00100, 0b01010, 0b00000, 0b00100, 0b10001, 0b11011, 0b00000, 0b00000 };
 byte venti_II[8]  = { 0b00000, 0b11011, 0b10001, 0b00100, 0b00000, 0b01010, 0b00100, 0b00000 };
 
-void tagec()
-// bluete Tagecounter
-{ relay_switching = digitalRead(licht_relay_p);
-  if (relay_switching != last_relay_state) {
-    if (relay_switching == LOW)
+void tagec(){ // bluete Tagecounter
+
+  bool relay_switching = digitalRead(licht_relay_p);
+  static bool last_relay_state;
+  
+  if(relay_switching != last_relay_state){
+    
+    if(relay_switching == LOW)
       setings_a.bloom_counter++;
-      write_EEPROM = true;
+      
+    write_EEPROM = true;
+    
   }
+  
   last_relay_state = relay_switching;
+  
 }
 
 void doEncoderA()
