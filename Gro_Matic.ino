@@ -451,7 +451,7 @@ void displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
   }
 
   // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-  if((millis() - buttonZeit > entprellZeit) && buttonGedrueckt == 1){
+  if((millis() - buttonZeit > entprellZeit) && buttonGedrueckt == true){
     
     hintergrund++;  // LCD Seite wird um +1 erhöht
     buttonGedrueckt = false;  // setzt gedrückten Taster zurück
@@ -462,7 +462,7 @@ void displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
     
     lcd.display();
     lcd.setBacklight(255);
-      
+
   } else if(hintergrund == 2){ // display ist ganz aus
     
     lcd.setBacklight(0);
