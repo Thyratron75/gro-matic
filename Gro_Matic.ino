@@ -127,7 +127,6 @@ LiquidCrystal_I2C lcd(LED_ADDR, 2, 1, 0, 4, 5, 6, 7, BACKLIGHT_PIN, POSITIVE);
 #define buttonPin 10
 
 //Displayfunktionen
-byte lcdbereinigen = 0;  // dispaly Clear funktion
 byte hintergrund = 1;    // schalte dispaly an menue
 
 //Programm modus und reset Taster
@@ -833,15 +832,8 @@ void loop(){
     
     screen++;  // LCD Seite wird um +1 erhöht
     screenGedrueckt = 0;  // setzt gedrückten Taster zurück
-    lcdbereinigen = 1;
-    
-  }
-  
-  if(lcdbereinigen == 1){ // Austosave des Lichtmodis starten
-
     lcd.clear();
-    lcdbereinigen = 0;
-
+    
   }
 
   //******************************************************************
