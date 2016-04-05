@@ -162,9 +162,9 @@ byte setmonat = 3;
 byte setjahr = 16;
 
 // BME 280
-int ltitemp;
+double ltitemp;
 double ltirlf;
-int dsplrlf;
+double dsplrlf;
 Adafruit_BME280 bme; // I2C
 
 // Encoder
@@ -281,13 +281,13 @@ void bme280(){ // Anzeige der Temp und RLF auf dem Display
       lcd.setCursor(0, 1);           // setze curserposition
       lcd.write(3);    // zeichne thermometer auf dem Display, siehe auch abschnitt Custom Caracter bzw. void setup
       lcd.print(F(" "));
-      lcd.print(ltitemp);
+      lcd.print(int(ltitemp));
       lcd.print((char)223);
       lcd.print(F("C "));
       lcd.print(F(" "));
       lcd.write(4);    // zeichne Wassertropfen auf dem Display, siehe auch abschnitt Custom Caracter bzw. void setup
       lcd.print(F(" "));
-      lcd.print(dsplrlf);
+      lcd.print(int(dsplrlf));
       lcd.print(F("%"));
       lcd.print(F("   "));
     }
