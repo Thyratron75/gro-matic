@@ -131,31 +131,26 @@ byte hintergrund = 1;    // schalte dispaly an menue
 
 //Programm modus und reset Taster
 #define wechslertPin A1  // Pinnummer des Tasters für zum Lichtmodus wechseln und Eprom Reset
-int wechslertStatus = LOW;  // aktuelles Signal vom Eingangspin des Wechslertasters
+
 byte wechslertGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
-unsigned int entprellZeit = 200;  // Zeit für Entprellung, anpassen!
+#define entprellZeit 200  // Zeit für Entprellung, anpassen!
 unsigned long wechslertZeit = 0;  // Zeit beim drücken des Tasters
-byte tage_reset = 0;
 
 // Verschiedene Variablen
-byte speichern = 0;  // Setzt autosave auf aus, erst wenn Lichtmodus gewechselt wird, wird auch gespeichert
-byte daycounter_speichern = 0;
-
-byte relay_bloom_switching = 0;
-byte relay_grow_switching = 0;
-byte relay_lsr_switching = 0;
+bool relay_bloom_switching  = 0;
+bool relay_grow_switching   = 0;
+bool relay_lsr_switching    = 0;
 
 // Ab hier LCD menue fuehrung und taster
 byte screen = 1;
 #define screenPin 4  // Pin für Taster zum umschalten der LCD seite
-int screenStatus = LOW;  // aktuelles Signal vom Eingangspin
-byte screenGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
+bool screenStatus = LOW;  // aktuelles Signal vom Eingangspin
+bool screenGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
 unsigned long screenZeit = 0;  // Zeit beim drücken des Tasters
 
 // Variablen für Starttag und bloomcounter
 byte letztertag = 0;
 byte letztermonat = 0;
-byte bloom_counter = 0;
 
 // Variablen zum einstellen der RTC
 byte setsekunde = 0;
@@ -659,7 +654,7 @@ void loop(){
     lastReportedPos = encoderPos;
 
   // ab hier Taster des Encoders
-  wechslertStatus = digitalRead(wechslertPin);
+  bool wechslertStatus = digitalRead(wechslertPin); // aktuelles Signal vom Eingangspin des Wechslertasters
 
   // Wenn der Wechseltaster gedrückt ist...
   if(wechslertStatus == HIGH){
@@ -766,7 +761,7 @@ void loop(){
     } else { 
       
       setings_a.lichtmodus = BLOOM;
-      speichern = 1;
+      write_EEPROM = true;
       
     }
     
@@ -972,11 +967,6 @@ void loop(){
     if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
       
       wechslertGedrueckt = 0;      // setzt gedrückten Taster zurück
-      tage_reset = 1;              // beginne Eprom Reset und starte neu
-    
-    }
-
-    if(tage_reset == 1){
       
       for(int i = 0; i < 512; i++)
         EEPROM.write(i, 0);
