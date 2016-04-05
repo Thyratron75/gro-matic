@@ -509,37 +509,55 @@ void tagec(){ // bluete Tagecounter
   
 }
 
-void doEncoderA()
-{
-  if ( rotating ) delay(1);  // debounce für Encoder Pin A
-  if ( digitalRead(encoderPinA) != A_set ) { // debounce erneut
+void doEncoderA(){
+  
+  if(rotating)
+    delay(1);  // debounce für Encoder Pin A
+    
+  if(digitalRead(encoderPinA) != A_set){ // debounce erneut
+    
     A_set = !A_set;
+    
     // stelle counter + 1 im Uhrzeigersinn
-    if ( A_set && !B_set )
+    if( A_set && !B_set)
       encoderPos += 1;
+      
     rotating = false;
+    
   }
+  
 }
 
-
-void doEncoderB() {
-  if ( rotating ) delay(1);
-  if ( digitalRead(encoderPinB) != B_set ) {
+void doEncoderB(){
+  
+  if(rotating)
+    delay(1);
+    
+  if(digitalRead(encoderPinB) != B_set){
+    
     B_set = !B_set;
+    
     //  stelle counter - 1 gegen Uhrzeigersinn
     if ( B_set && !A_set )
       encoderPos -= 1;
+      
     rotating = false;
+    
   }
+  
 }
 
 // Wassernfunktion
-void startzeitwassern() {
+void startzeitwassern(){
+  
   digitalWrite(irrigation, LOW);
+  
 }
 
-void endzeitwassern() {
+void endzeitwassern(){
+  
   digitalWrite(irrigation, HIGH);
+  
 }
 
 /* Lese EEPROM in setings oder schreibe defaults in EEPROM */
@@ -548,7 +566,7 @@ void readEEPROM(){
   /* Lese EEPROM structure in speicher*/
   EEPROM.get(0, setings_a);
 
-  if( setings_a.MAGIC_NUMBER != MAGIC_NUMBER ){ // Vergleiche Magic number wenn ungleich schreibe EEPROM mit defaults neu.
+  if(setings_a.MAGIC_NUMBER != MAGIC_NUMBER ){ // Vergleiche Magic number wenn ungleich schreibe EEPROM mit defaults neu.
 
     setings_a = setings_b; // settings_a ist b (defaults)
     EEPROM.put(0, setings_b); // Schreibe settings_b, enthält default einstellungen.
@@ -558,9 +576,10 @@ void readEEPROM(){
     setings_b = setings_a; // Überschreibe default setings_b mit custom a
 
   }
+  
 }
 
-void setup() {
+void setup(){
 
   Serial.begin(9600);
 
@@ -637,14 +656,14 @@ void loop(){
   //********************************************************************
   rotating = true;  // reset the debouncer
 
-  if (lastReportedPos != encoderPos)
+  if(lastReportedPos != encoderPos)
     lastReportedPos = encoderPos;
 
   // ab hier Taster des Encoders
   wechslertStatus = digitalRead(wechslertPin);
 
   // Wenn der Wechseltaster gedrückt ist...
-  if (wechslertStatus == HIGH) {
+  if(wechslertStatus == HIGH){
     
     wechslertZeit = millis();  // aktualisiere tasterZeit
     wechslertGedrueckt = 1;  // speichert, dass Taster gedrückt wurde
@@ -653,177 +672,182 @@ void loop(){
 
   //***********************************************
 
-  if (setings_a.lichtmodus == 0)
-  {
+  if (setings_a.lichtmodus == LSR){
 
-    if ((hour() >= setings_a.lsr_an) && (hour() < setings_a.lsr_aus))
-    { digitalWrite(lsr_relay_p, LOW); //schaltet lsr um 5 Uhr an und um 22:59:59 Uhr aus
+    if((hour() >= setings_a.lsr_an) && (hour() < setings_a.lsr_aus)){
+      
+      digitalWrite(lsr_relay_p, LOW); //schaltet lsr um 5 Uhr an und um 22:59:59 Uhr aus
       digitalWrite(licht_relay_p, HIGH); //schaltet ndl Relais aus sollten sie noch an sein
 
       // Umluftventilator alle 15 minuten einschalten wenn licht an
-      if ( (minute() >= 15 && minute() <= 29 ) || (minute() >= 45 && minute() <= 59))
-      {
+      if((minute() >= 15 && minute() <= 29 ) || (minute() >= 45 && minute() <= 59)){
+        
         digitalWrite(ventilator, LOW);
-      }
-      else
-      {
+        
+      } else {
+        
         digitalWrite(ventilator, HIGH);
+        
       }
-
-    }
-
-    else
-    { digitalWrite(lsr_relay_p, HIGH);
-      if ( (hour() >= setings_a.grow_licht_aus) & (hour() < setings_a.grow_licht_an) || (hour() >= setings_a.bloom_licht_aus) & (hour() <= setings_a.bloom_licht_an))
+      
+    } else { 
+      
+      digitalWrite(lsr_relay_p, HIGH);
+      
+      if((hour() >= setings_a.grow_licht_aus) & (hour() < setings_a.grow_licht_an) || (hour() >= setings_a.bloom_licht_aus) & (hour() <= setings_a.bloom_licht_an))
         digitalWrite(licht_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
-      if ((minute() >= 15) && (minute() <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
-      {
+      
+      if((minute() >= 15) && (minute() <= 19)){ // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
+
         digitalWrite(ventilator, LOW);
-      }
-      else
-      {
+        
+      } else {
+        
         digitalWrite(ventilator, HIGH);
+        
       }
+      
     }
 
-  }
+  } else if (setings_a.lichtmodus == GROW) {
 
-  else if (setings_a.lichtmodus == 1)
-  {
-
-    if ((hour() >= setings_a.grow_licht_an) && (hour() < setings_a.grow_licht_aus))
-    { digitalWrite(licht_relay_p, LOW); //schaltet ndl im Grow modus 18h licht um 5 Uhr an und um 22:59:59 Uhr aus
+    if((hour() >= setings_a.grow_licht_an) && (hour() < setings_a.grow_licht_aus)){ 
+      
+      digitalWrite(licht_relay_p, LOW); //schaltet ndl im Grow modus 18h licht um 5 Uhr an und um 22:59:59 Uhr aus
       digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
 
       // Umluftventilator alle 15 minuten einschalten wenn licht an
-      if ( (minute() >= 15 && minute() <= 29 ) || (minute() >= 45 && minute() <= 59) )
-      {
+      if((minute() >= 15 && minute() <= 29 ) || (minute() >= 45 && minute() <= 59) ){
+        
         digitalWrite(ventilator, LOW);
-      }
-      else
-      {
+        
+      } else {
+        
         digitalWrite(ventilator, HIGH);
+        
       }
 
-    }
-
-    else
-    { digitalWrite(licht_relay_p, HIGH);
-      if ( (hour() >= setings_a.lsr_aus) & (hour() < setings_a.lsr_an) )
+    } else {
+      
+      digitalWrite(licht_relay_p, HIGH);
+      
+      if((hour() >= setings_a.lsr_aus) & (hour() < setings_a.lsr_an))
         digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
-      if ((minute() >= 15) && (minute() <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
-      {
+      
+      if((minute() >= 15) && (minute() <= 19)){ // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
+
         digitalWrite(ventilator, LOW);
-      }
-      else
-      {
+        
+      } else {
+        
         digitalWrite(ventilator, HIGH);
+        
       }
+      
     }
 
-  }
+  } else if(setings_a.lichtmodus == BLOOM){
 
-  else if (setings_a.lichtmodus == 2)
-  {
-
-    if ((hour() >= setings_a.grow_licht_an) && (hour() < setings_a.grow_licht_aus))
-    { digitalWrite(licht_relay_p, LOW); //schaltet ndl im Grow modus 18h licht um 5 Uhr an und um 22:59:59 Uhr aus
+    if((hour() >= setings_a.grow_licht_an) && (hour() < setings_a.grow_licht_aus)){
+      
+      digitalWrite(licht_relay_p, LOW); //schaltet ndl im Grow modus 18h licht um 5 Uhr an und um 22:59:59 Uhr aus
       digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
+      
       // Umluftventilator alle 15 minuten einschalten wenn licht an
-      if ( (minute() >= 15 &&  minute() <= 29) || (minute() >= 45 && minute() <= 59) )
-      {
+      if((minute() >= 15 &&  minute() <= 29) || (minute() >= 45 && minute() <= 59)){
+        
         digitalWrite(ventilator, LOW);
-      }
-      else
-      {
+        
+      } else {
+        
         digitalWrite(ventilator, HIGH);
+        
       }
-    }
-
-    else
-    { setings_a.lichtmodus = 3;
+      
+    } else { 
+      
+      setings_a.lichtmodus = BLOOM;
       speichern = 1;
+      
     }
-  }
-
-  else if (setings_a.lichtmodus == 3)
-  {
+    
+  } else if(setings_a.lichtmodus == BLOOM){
+    
     tagec();
 
-    if ((hour() >= setings_a.bloom_licht_an) && (hour() < setings_a.bloom_licht_aus))
-    { digitalWrite(licht_relay_p, LOW); //schaltet ndl im Bloom modus 12h licht um 5 Uhr an und um 16:59:59 Uhr aus
+    if((hour() >= setings_a.bloom_licht_an) && (hour() < setings_a.bloom_licht_aus)){
+      
+      digitalWrite(licht_relay_p, LOW); //schaltet ndl im Bloom modus 12h licht um 5 Uhr an und um 16:59:59 Uhr aus
       digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
 
       // Umluftventilator alle 15 minuten einschalten wenn licht an
-      if ( (minute() >= 15 && minute() <= 29 ) || (minute() >= 45 && minute() <= 59) )
-      {
+      if((minute() >= 15 && minute() <= 29 ) || (minute() >= 45 && minute() <= 59)){
+        
         digitalWrite(ventilator, LOW);
-      }
-      else
-      {
+        
+      } else {
+        
         digitalWrite(ventilator, HIGH);
+        
       }
-
-
-    }
-
-    else
-    { digitalWrite(licht_relay_p, HIGH);
-      if ( (hour() >= setings_a.grow_licht_aus) & (hour() < setings_a.grow_licht_an) || (hour() >= setings_a.lsr_aus) & (hour() < setings_a.lsr_an) )
+      
+    } else { 
+      
+      digitalWrite(licht_relay_p, HIGH);
+      
+      if((hour() >= setings_a.grow_licht_aus) & (hour() < setings_a.grow_licht_an) || (hour() >= setings_a.lsr_aus) & (hour() < setings_a.lsr_an) )
         digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
-      if ((minute() >= 15) && (minute() <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
-      {
+      
+      if((minute() >= 15) && (minute() <= 19)){ // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
+ 
         digitalWrite(ventilator, LOW);
-      }
-      else
-      {
+        
+      } else {
+        
         digitalWrite(ventilator, HIGH);
+        
       }
+      
     }
 
-  }
+  } // Lichtmodus Ende
 
-  // Lichtmodus Ende
-  //*********************************************************************************************
+  // Autobewaesserung
 
-  //**************************** Autobewaesserung
-
-  if (setings_a.autowasser == 1)
-  {
-
-  }
-
-  // Autobewaesserung Ende
-  //*********************************************************************************************
+  if(setings_a.autowasser == 1){
+  } // Autobewaesserung Ende
 
   // ab hier Taster abfrage fuer LCD menue
   screenStatus = digitalRead(screenPin);
 
   // Wenn der Wechseltaster gedrückt ist...
-  if (screenStatus == HIGH)
-  {
+  if(screenStatus == HIGH){
+    
     screenZeit = millis();  // aktualisiere tasterZeit
     screenGedrueckt = 1;  // speichert, dass Taster gedrückt wurde
+    
   }
 
   // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-  if ((millis() - screenZeit > entprellZeit) && screenGedrueckt == 1)
-  {
+  if((millis() - screenZeit > entprellZeit) && screenGedrueckt == 1){
+    
     screen++;  // LCD Seite wird um +1 erhöht
     screenGedrueckt = 0;  // setzt gedrückten Taster zurück
     lcdbereinigen = 1;
+    
   }
-  if (lcdbereinigen == 1) { // Austosave des Lichtmodis starten
+  
+  if(lcdbereinigen == 1){ // Austosave des Lichtmodis starten
+
     lcd.clear();
     lcdbereinigen = 0;
+
   }
-
-
 
   //******************************************************************
 
-  if (screen == 1)
-  {
+  if(screen == 1){
+    
     // Rufe funktionen für Seite 1 auf
     displayTime();        // zeige die RTC Daten auf dem LCD display,
     bme280();          // zeige temp und rlf auf dem LCD display,
@@ -831,131 +855,162 @@ void loop(){
     gy30();  // Luxmeter
 
     //GY-30
-    if (second() >= 0) {
+    if(second() >= 0){
+      
       void BH1750_Init(int address);
+      
     }
 
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-    if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-    {
+    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      
       setings_a.lichtmodus++;  // lichtmodus wird um +1 erhöht
       write_EEPROM = true;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
+    
     }
 
     //*********Ventilator Icon
 
-    static bool ventiicon;
+    static bool           ventiicon;
     static unsigned long  previousMillis;
     unsigned long         currentMillis = millis();
-    const uint8_t               OnTime = 300;
+    const uint8_t         OnTime = 300;
     
-    if (digitalRead(ventilator) == LOW) {
-      if ((ventiicon == HIGH) && (currentMillis - previousMillis >= OnTime)) {
+    if(digitalRead(ventilator) == LOW){
+      
+      if((ventiicon == HIGH) && (currentMillis - previousMillis >= OnTime)){
+        
         ventiicon = LOW;
         previousMillis = currentMillis;
         lcd.setCursor(17, 2);
         lcd.write(7);
+        
       }
 
-      if ((ventiicon == LOW) && (currentMillis - previousMillis >= OnTime)) {
+      if((ventiicon == LOW) && (currentMillis - previousMillis >= OnTime)){
+        
         ventiicon = HIGH;
         previousMillis = currentMillis;
         lcd.setCursor(17, 2);
         lcd.write(8);
+        
       }
     }
-    if (digitalRead(ventilator) == HIGH) {
+    
+    if(digitalRead(ventilator) == HIGH){
+      
       lcd.setCursor(17, 2);
       lcd.print(F(" "));
+      
     }
+    
     //*************************************Programm-Modis**************************************
 
     // Wenn Lichtmodus 0 ist, starte im LSR modus
-    if (setings_a.lichtmodus == LSR){
+    if(setings_a.lichtmodus == LSR){
       
       lcd.setCursor(10, 3);
       lcd.print(F("  LSR Mode"));
       relay_lsr_switching = digitalRead(lsr_relay_p);
       
-      if (relay_lsr_switching == LOW){
+      if(relay_lsr_switching == LOW){
         
         lcd.setCursor(19, 2);
         lcd.write(2);
         
       }
       
-      if (relay_lsr_switching == HIGH){
+      if(relay_lsr_switching == HIGH){
         
         lcd.setCursor(19, 2);
         lcd.write(1);
       
       }
       
-    } else if (setings_a.lichtmodus == GROW) {
+    } else if(setings_a.lichtmodus == GROW){
       
       lcd.setCursor(10, 3);
       lcd.print(F(" Grow Mode"));
       relay_grow_switching = digitalRead(licht_relay_p);
       
-      if (relay_grow_switching == LOW) {
+      if(relay_grow_switching == LOW){
+        
         lcd.setCursor(19, 2);
         lcd.write(2);
+        
       }
       
-      if (relay_grow_switching == HIGH) {
+      if(relay_grow_switching == HIGH){
+        
         lcd.setCursor(19, 2);
         lcd.write(1);
+        
       }
       
-    } else if (setings_a.lichtmodus == BLOOM) {
+    } else if(setings_a.lichtmodus == BLOOM){
       
       lcd.setCursor(10, 3);
       lcd.print(F("Bloom Mode"));
       relay_bloom_switching = digitalRead(licht_relay_p);
-      if (relay_bloom_switching == LOW) {
+      
+      if(relay_bloom_switching == LOW){
+        
         lcd.setCursor(19, 2);
         lcd.write(2);
+        
       }
-      if (relay_bloom_switching == HIGH) {
+      
+      if(relay_bloom_switching == HIGH){
+        
         lcd.setCursor(19, 2);
         lcd.write(1);
+        
       }
-    }
-
-    // Wenn der Lichtmodus auf 3 springt, setzte ihn wieder zurück auf 0 um von vorne zu beginnen
-    else {
       
+    } else { // Wenn der Lichtmodus auf 3 springt, setzte ihn wieder zurück auf 0 um von vorne zu beginnen
+
       setings_a.lichtmodus = LSR;
       
     } // Lichtmodus Ende
 
-  } else if (screen == 2){
+  } else if(screen == 2){
 
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Tagecounter gelöscht werden ...
-    if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-    {
+    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      
       wechslertGedrueckt = 0;      // setzt gedrückten Taster zurück
       tage_reset = 1;              // beginne Eprom Reset und starte neu
+    
     }
 
-    if (tage_reset == 1) {
-      for (int i = 0; i < 512; i++)
+    if(tage_reset == 1){
+      
+      for(int i = 0; i < 512; i++)
         EEPROM.write(i, 0);
+        
       asm volatile ("jmp 0");
+      
     }
+    
     lcd.setCursor(0, 0);
     lcd.print(F("Starttag am: "));
-    if (letztertag < 10)
-    {
+    
+    if(letztertag < 10){
+      
       lcd.print(F("0"));
+      
     }
+    
     lcd.print(letztertag);
     lcd.print(F("."));
-    if (letztermonat < 10)
-    {
+    
+    if(letztermonat < 10){
+      
       lcd.print(F("0"));
+      
     }
+    
     lcd.print(letztermonat);
     lcd.setCursor(0, 1);
     lcd.print(F("Bl"));
@@ -971,16 +1026,15 @@ void loop(){
     lcd.print((char)0xEF);
     lcd.print(F("schen."));
 
-  }
-
-  else if (screen == 3)
-  {
+  } else if(screen == 3){
+    
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-    if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-    {
+    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      
       setings_a.autowasser++;
       write_EEPROM = true;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
+      
     }
 
     //*************************************Programm-Modis**************************************
@@ -996,7 +1050,7 @@ void loop(){
       lcd.write(6);
       lcd.print(F(" aus"));
       
-    } else if( setings_a.autowasser == false) {
+    } else if(setings_a.autowasser == false){
       
       lcd.setCursor(0, 2);
       lcd.print(F("Autobew"));
@@ -1012,7 +1066,6 @@ void loop(){
       
     }
 
-
     // Autobewaesserung Ende
 
     lcd.setCursor(0, 0);
@@ -1027,9 +1080,8 @@ void loop(){
     lcd.print(bodensensor.getTemperature() / (float)10); //lese temperatur register des bodensensors
     lcd.print((char)223);
     lcd.print(F("C "));
-  }
-  else if (screen == 4)
-  {
+
+  } else if (screen == 4) {
 
     lcd.setCursor(0, 0);
     lcd.print(F("Schaltzeiten Licht"));
@@ -1051,16 +1103,17 @@ void loop(){
     lcd.print(F(":00-"));
     lcd.print(setings_a.bloom_licht_aus);
     lcd.print(F(":00 Uhr"));
-    if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-    {
+    
+    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      
       lcd.clear();
       Alarm.delay(50);
       screen = 7;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
+      
     }
-  }
-  else if (screen == 5)
-  {
+    
+  } else if(screen == 5) {
 
     lcd.setCursor(0, 0);
     lcd.print(F("eingest. LTI Werte"));
@@ -1085,8 +1138,9 @@ void loop(){
     lcd.print(F("C, :"));
     lcd.print(setings_a.bloom_rlf);
     lcd.print(F(" %"));
-    if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-    {
+    
+    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      
       lcd.clear();
       Alarm.delay(200);
       temp_bereich = 0;
@@ -1095,33 +1149,32 @@ void loop(){
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
 
     }
-  }
-  else if (screen == 6)
-  {
+    
+  } else if(screen == 6){
 
     screen = 10; // geht wieder auf seite 1 zurück
-  }
+  
+  } else if(screen == 7){
 
-  else if (screen == 7)
-  {
-
-    if (encoderPos == 24) {
-
+    if(encoderPos == 24)
       encoderPos = 0;
-    }
-    if (encoderPos >= 24) {
+
+    if(encoderPos >= 24){
+      
       lcd.clear();
       encoderPos = 23;
+    
     }
 
-    if (anaus == 0) {
+    if(anaus == 0){
 
       lcd.setCursor(0, 0);
       lcd.print(F("LSR an:    "));
-      if (encoderPos < 10)
-      {
+      
+      if (encoderPos < 10){
         lcd.print("0");
       }
+      
       lcd.print(encoderPos);
       lcd.print(F(" Uhr"));
       lcd.setCursor(0, 1);
@@ -1135,23 +1188,26 @@ void loop(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
 
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         setings_a.lsr_an = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM = true;
         lcd.clear();
         anaus++;
+        
       }
+      
     }
 
-    if (anaus == 1) {
+    if(anaus == 1){
+      
       lcd.setCursor(0, 0);
       lcd.print(F("LSR aus:   "));
+      
       if (encoderPos < 10)
-      {
         lcd.print("0");
-      }
+ 
       lcd.print(encoderPos);
       lcd.print(F(" Uhr"));
       lcd.setCursor(0, 1);
@@ -1164,29 +1220,37 @@ void loop(){
       lcd.print(F("hlen. optimale"));
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
-        if (encoderPos == 0) {
+ 
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
+        if(encoderPos == 0){
+          
           encoderPos = 23;
           setings_a.lsr_aus = encoderPos;
-        }
-        else {
+          
+        } else {
+          
           setings_a.lsr_aus = encoderPos;
+        
         }
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
+        
         write_EEPROM = true;
         lcd.clear();
         anaus++;
+      
       }
+    
     }
 
-    if (anaus == 2) {
+    if(anaus == 2){
+      
       lcd.setCursor(0, 0);
       lcd.print(F("Grow an:   "));
-      if (encoderPos < 10)
-      {
+      
+      if(encoderPos < 10)
         lcd.print("0");
-      }
+
       lcd.print(encoderPos);
       lcd.print(F(" Uhr"));
       lcd.setCursor(0, 1);
@@ -1199,22 +1263,27 @@ void loop(){
       lcd.print(F("hlen. optimale"));
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         setings_a.grow_licht_an = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM = true;
         lcd.clear();
         anaus++;
+        
       }
+      
     }
-    if (anaus == 3) {
+    
+    if(anaus == 3){
+      
       lcd.setCursor(0, 0);
       lcd.print(F("Grow aus:  "));
-      if (encoderPos < 10)
-      {
+      
+      if(encoderPos < 10)
         lcd.print("0");
-      }
+ 
       lcd.print(encoderPos);
       lcd.print(F(" Uhr"));
       lcd.setCursor(0, 1);
@@ -1227,28 +1296,37 @@ void loop(){
       lcd.print(F("hlen. optimale"));
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
-        if (encoderPos == 0) {
+      
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
+        if(encoderPos == 0){
+          
           encoderPos = 23;
           setings_a.grow_licht_aus = encoderPos;
-        }
-        else {
+        
+        } else {
+          
           setings_a.grow_licht_aus = encoderPos;
+          
         }
+        
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM = true;
         lcd.clear();
         anaus++;
+        
       }
+      
     }
-    if (anaus == 4) {
+    
+    if(anaus == 4){
+      
       lcd.setCursor(0, 0);
       lcd.print(F("Bloom an:  "));
+      
       if (encoderPos < 10)
-      {
         lcd.print("0");
-      }
+
       lcd.print(encoderPos);
       lcd.print(F(" Uhr"));
       lcd.setCursor(0, 1);
@@ -1261,23 +1339,27 @@ void loop(){
       lcd.print(F("hlen. optimale"));
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 12 Stunden"));
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         setings_a.bloom_licht_an = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM = true;
         lcd.clear();
         anaus++;
+        
       }
 
     }
-    if (anaus == 5) {
+ 
+    if(anaus == 5){
+      
       lcd.setCursor(0, 0);
       lcd.print(F("Bloom aus: "));
-      if (encoderPos < 10)
-      {
+      
+      if(encoderPos < 10)        
         lcd.print("0");
-      }
+
       lcd.print(encoderPos);
       lcd.print(F(" Uhr"));
       lcd.setCursor(0, 1);
@@ -1290,39 +1372,48 @@ void loop(){
       lcd.print(F("hlen. optimale"));
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 12 Stunden"));
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
-        if (encoderPos == 0) {
+      
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
+        if(encoderPos == 0){
+          
           encoderPos = 23;
           setings_a.bloom_licht_aus = encoderPos;
-        }
-        else {
+          
+        } else {
+          
           setings_a.bloom_licht_aus = encoderPos;
+          
         }
+        
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM = true;
         lcd.clear();
         delay (100);
         anaus = 0;
         screen = 4;
+        
       }
+      
     }
 
+  }  else if(screen == 8) {
 
-  }
-  else if (screen == 8)
-  {
-
-
-    if (encoderPos >= 29) {
+    if(encoderPos >= 29){
+      
       encoderPos = 17;
+      
     }
-    else if (encoderPos <= 16) {
+    
+    else if(encoderPos <= 16){
+      
       lcd.clear();
       encoderPos = 28;
+      
     }
 
-    if (temp_bereich == 0) {
+    if(temp_bereich == 0){
+      
       lcd.setCursor(0, 0);
       lcd.print(F("LSR max. "));
       lcd.write(3);
@@ -1339,17 +1430,21 @@ void loop(){
       lcd.print(F(" - 25"));
       lcd.print((char)223);
       lcd.print(F("C"));
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         setings_a.lsr_temp = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM = true;
         lcd.clear();
         temp_bereich++;
+        
       }
+      
     }
 
-    if (temp_bereich == 1) {
+    if(temp_bereich == 1){
+      
       lcd.setCursor(0, 0);
       lcd.print(F("Grow max. "));
       lcd.write(3);
@@ -1366,17 +1461,21 @@ void loop(){
       lcd.print(F(" - 23"));
       lcd.print((char)223);
       lcd.print(F("C"));
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         setings_a.grow_temp = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM = true;
         lcd.clear();
         temp_bereich++;
+        
       }
+      
     }
 
-    if (temp_bereich == 2) {
+    if(temp_bereich == 2){
+      
       lcd.setCursor(0, 0);
       lcd.print(F("Bloom max. "));
       lcd.write(3);
@@ -1393,29 +1492,34 @@ void loop(){
       lcd.print(F(" - 22"));
       lcd.print((char)223);
       lcd.print(F("C"));
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         setings_a.bloom_temp = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM = true;
         lcd.clear();
         screen = 9;
+        
       }
+      
     }
 
-  }
-  else if (screen == 9)
-  {
+  }else if(screen == 9){
 
-    if (encoderPos >= 71) {
+    if(encoderPos >= 71){
+      
       encoderPos = 15;
-    }
-    else if (encoderPos <= 14) {
+      
+    } else if(encoderPos <= 14){
+      
       lcd.clear();
       encoderPos = 70;
+      
     }
 
-    if (rlf_bereich == 0) {
+    if(rlf_bereich == 0){
+      
       lcd.setCursor(0, 0);
       lcd.print(F("LSR max. "));
       lcd.write(4);
@@ -1426,16 +1530,21 @@ void loop(){
       lcd.print(F("optimaler bereich"));
       lcd.setCursor(0, 2);
       lcd.print(F("zwischen 55 % - 60 %"));
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         setings_a.lsr_rlf = (double) encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM = true;
         lcd.clear();
         rlf_bereich++;
+        
       }
+      
     }
-    if (rlf_bereich == 1) {
+    
+    if(rlf_bereich == 1){
+      
       lcd.setCursor(0, 0);
       lcd.print(F("Grow max. "));
       lcd.write(4);
@@ -1446,16 +1555,21 @@ void loop(){
       lcd.print(F("optimaler bereich"));
       lcd.setCursor(0, 2);
       lcd.print(F("zwischen 50 % - 55 %"));
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      
+      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         setings_a.grow_rlf = (double) encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM = true;
         lcd.clear();
         rlf_bereich++;
+        
       }
+      
     }
-    if (rlf_bereich == 2) {
+    
+    if (rlf_bereich == 2){
+      
       lcd.setCursor(0, 0);
       lcd.print(F("Bloom max. "));
       lcd.write(4);
@@ -1468,181 +1582,214 @@ void loop(){
       lcd.print(F("ber"));
       lcd.setCursor(0, 2);
       lcd.print(F("40 % RLF"));
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         setings_a.bloom_rlf = (double) encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM = true;
         lcd.clear();
         rlf_bereich++;
+        
       }
+      
     }
-    if (rlf_bereich == 3) {
+    
+    if(rlf_bereich == 3){
+      
       temp_bereich = 0;
       rlf_bereich = 0;
       screen = 5;
+      
     }
 
   }
 
-  else if (screen == 10) {
+  else if(screen == 10){
 
-    if (encoderPos > 1) {
+    if(encoderPos > 1){
+      
       encoderPos = 1;
-    }
-    else if (encoderPos < 0) {
+      
+    } else if(encoderPos < 0){
+      
       lcd.clear();
       encoderPos = 0;
+      
     }
+    
     lcd.setCursor(0, 0);
     lcd.print(F("RTC einstellen?"));
     lcd.setCursor(0, 1);
-    switch (encoderPos) {
+    
+    switch(encoderPos){
+      
       case 0:
         lcd.print("nein");
         break;
       case 1:
         lcd.print("ja  ");
         break;
+        
     }
-    if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-    {
+    
+    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      
       wechslertGedrueckt = 0;
-      if (encoderPos == 0) {
+      
+      if(encoderPos == 0)
         screen = 13;
-      }
-      if (encoderPos == 1) {
+ 
+      if(encoderPos == 1)
         screen = 12;
-      }
+
     }
-  }
-  else if (screen == 11) {
+    
+  } else if(screen == 11){
+    
     screen = 1;
-  }
+    
+  } else if(screen == 12){
 
-
-
-  else if (screen == 12)
-  {
-
-    if (zeitstellen == 0) {
-      if (encoderPos >= 32) {
+    if(zeitstellen == 0){
+      
+      if(encoderPos >= 32){
+        
         encoderPos = 1;
-      }
-      else if (encoderPos <= 0) {
+        
+      } else if(encoderPos <= 0){
+        
         lcd.clear();
         encoderPos = 31;
+        
       }
 
       lcd.setCursor(0, 0);
       lcd.print(F("Tag einstellen:"));
       lcd.setCursor(0, 1);
-      if (encoderPos < 10)
-      {
+      
+      if(encoderPos < 10)
         lcd.print("0");
-      }
+      
       lcd.print(encoderPos);
       lcd.print(F("."));
+      
       if (setmonat < 10)
-      {
         lcd.print("0");
-      }
+ 
       lcd.print(setmonat);
       lcd.print(F("."));
       lcd.print(2000 + setjahr);
 
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         settag = encoderPos;
         lcd.clear();
         zeitstellen++;
+        
       }
 
     }
 
-    if (zeitstellen == 1) {
-      if (encoderPos >= 13) {
+    if(zeitstellen == 1){
+      
+      if(encoderPos >= 13){
+        
         encoderPos = 1;
-      }
-      else if (encoderPos <= 0) {
+        
+      } else if(encoderPos <= 0){
+        
         lcd.clear();
         encoderPos = 12;
+        
       }
 
       lcd.setCursor(0, 0);
       lcd.print(F("Monat einstellen:"));
       lcd.setCursor(0, 1);
-      if (settag < 10)
-      {
+      
+      if(settag < 10)
         lcd.print("0");
-      }
+        
       lcd.print(settag);
       lcd.print(F("."));
-      if (encoderPos < 10)
-      {
+      
+      if(encoderPos < 10)
         lcd.print("0");
-      }
+
       lcd.print(encoderPos);
       lcd.print(F("."));
       lcd.print(2000 + setjahr);
 
 
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         setmonat = encoderPos;
         lcd.clear();
         zeitstellen++;
+        
       }
 
     }
 
-    if (zeitstellen == 2) {
+    if(zeitstellen == 2){
+      
       byte encoderPos = 16;
-      if (encoderPos <= 15) {
+      
+      if(encoderPos <= 15){
+        
         lcd.clear();
         encoderPos = 50;
-      }
-      else if (encoderPos >= 51) {
+        
+      } else if (encoderPos >= 51){
+        
         encoderPos = 16;
+        
       }
 
       lcd.setCursor(0, 0);
       lcd.print(F("Jahr einstellen:"));
       lcd.setCursor(0, 1);
+      
       if (settag < 10)
-      {
         lcd.print("0");
-      }
+
       lcd.print(settag);
       lcd.print(F("."));
+
       if (setmonat < 10)
-      {
         lcd.print("0");
-      }
+
       lcd.print(setmonat);
       lcd.print(F("."));
       lcd.print(2000 + encoderPos);
 
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         setjahr = encoderPos;
         lcd.clear();
         zeitstellen++;
+        
       }
 
     }
 
-    if (zeitstellen == 3) {
-      if (encoderPos >= 8) {
+    if(zeitstellen == 3){
+      
+      if(encoderPos >= 8){
+        
         encoderPos = 1;
-      }
-      else if (encoderPos <= 0) {
+        
+      } else if(encoderPos <= 0){
+        
         lcd.clear();
         encoderPos = 7;
+        
       }
+      
       lcd.setCursor(0, 0);
       lcd.print(F("Tag der Woche"));
       lcd.setCursor(0, 1);
@@ -1650,97 +1797,106 @@ void loop(){
       const char c_dayOfWeek[7][11]={ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"};
       lcd.print(c_dayOfWeek[encoderPos]);
 
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         settagderwoche = encoderPos;
         lcd.clear();
         zeitstellen++;
+        
       }
 
     }
 
-    if (zeitstellen == 4) {
-      if (encoderPos == 24) {
+    if(zeitstellen == 4){
+      
+      if(encoderPos == 24)
         encoderPos = 0;
-      }
-      if (encoderPos >= 24) {
+ 
+      if(encoderPos >= 24){
+        
         lcd.clear();
         encoderPos = 23;
+        
       }
 
       lcd.setCursor(0, 0);
       lcd.print(F("Stunde einstellen:"));
       lcd.setCursor(0, 1);
-      if (encoderPos < 10)
-      {
+ 
+      if(encoderPos < 10)
         lcd.print("0");
-      }
+        
       lcd.print(encoderPos);
       lcd.print(F(":"));
+      
       if (setminute < 10)
-      {
         lcd.print("0");
-      }
+
       lcd.print(setminute);
       lcd.print(F(":"));
+
       if (setsekunde < 10)
-      {
         lcd.print("0");
-      }
+
       lcd.print(setsekunde);
 
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         setstunde = encoderPos;
         lcd.clear();
         zeitstellen++;
+        
       }
 
     }
 
-    if (zeitstellen == 5) {
-      if (encoderPos == 60) {
+    if(zeitstellen == 5){
+      
+      if(encoderPos == 60){
+       
         encoderPos = 0;
-      }
-      else if (encoderPos == 65535) {
+        
+      } else if(encoderPos == 65535){
+        
         lcd.clear();
         encoderPos = 59;
+        
       }
 
       lcd.setCursor(0, 0);
       lcd.print(F("Minute einstellen:"));
       lcd.setCursor(0, 1);
-      if (setstunde < 10)
-      {
+      
+      if(setstunde < 10)
         lcd.print("0");
-      }
+
       lcd.print(setstunde);
       lcd.print(F(":"));
-      if (encoderPos < 10)
-      {
+      
+      if(encoderPos < 10)
         lcd.print("0");
-      }
+
       lcd.print(encoderPos);
       lcd.print(F(":"));
-      if (setsekunde < 10)
-      {
+      if(setsekunde < 10)
         lcd.print("0");
-      }
+
       lcd.print(setsekunde);
 
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         setminute = encoderPos;
         lcd.clear();
         zeitstellen++;
+        
       }
 
     }
 
-    if (zeitstellen == 6) {
+    if(zeitstellen == 6){
       
       lcd.setCursor(0, 0);
 
@@ -1749,7 +1905,7 @@ void loop(){
       
       lcd.setCursor(0, 1);
       
-      if (setstunde < 10)
+      if(setstunde < 10)
         lcd.print("0");
 
       lcd.print(setstunde);
@@ -1767,7 +1923,7 @@ void loop(){
       lcd.print(setsekunde);
       lcd.print(F(" "));
       
-      if (settag < 10)
+      if(settag < 10)
         lcd.print("0");
 
       lcd.print(settag);
@@ -1788,8 +1944,8 @@ void loop(){
       lcd.setCursor(0, 3);
       lcd.print("Zeit zu setzen.");
 
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-      {
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+        
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
 
         // Set system time.
@@ -1803,17 +1959,20 @@ void loop(){
       }
 
     }
-  }
-
-  else if (screen == 13)
-  {
-    if (encoderPos > 1) {
+    
+  } else if(screen == 13){
+    
+    if(encoderPos > 1){
+      
       encoderPos = 1;
-    }
-    else if (encoderPos < 0) {
+      
+    } else if (encoderPos < 0){
+      
       lcd.clear();
       encoderPos = 0;
+      
     }
+    
     lcd.setCursor(0, 0);
     lcd.print(F("Bew"));
     lcd.print((char)0xE1);
@@ -1821,186 +1980,210 @@ void loop(){
     lcd.setCursor(0, 1);
     lcd.print(F("einstellen?"));
     lcd.setCursor(0, 2);
-    switch (encoderPos) {
+    
+    switch(encoderPos){
+      
       case 0:
         lcd.print("nein");
         break;
       case 1:
         lcd.print("ja  ");
         break;
+        
     }
-    if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-    {
+    
+    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      
       wechslertGedrueckt = 0;
-      if (encoderPos == 0) {
+      
+      if(encoderPos == 0)
         screen = 1;
-      }
-      if (encoderPos == 1) {
+  
+      if(encoderPos == 1){
+        
         lcd.clear();
         screen = 14;
+        
       }
+      
     }
-  }
-
-
-  else if (screen == 14)
-  {
-    if (encoderPos == 24) {
+    
+  } else if(screen == 14){
+    
+    if(encoderPos == 24)
       encoderPos = 0;
-    }
-    if (encoderPos >= 24) {
+
+    if(encoderPos >= 24){
+      
       lcd.clear();
       encoderPos = 23;
+      
     }
 
     lcd.setCursor(0, 0);
     lcd.print(F("Startzeit setzen:"));
     lcd.setCursor(0, 1);
-    if (encoderPos < 10)
-    {
+    
+    if(encoderPos < 10)
       lcd.print("0");
-    }
+      
     lcd.print(encoderPos);
     lcd.print(F(" Uhr"));
-    if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-    {
+    
+    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      
       setings_a.startwasser = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
       write_EEPROM = true;
       lcd.clear();
       screen = 15;
+      
     }
-  }
-
-  else if (screen == 15)
-  {
-    if (encoderPos == 60) {
+    
+  } else if(screen == 15){
+    
+    if(encoderPos == 60){
+      
       encoderPos = 0;
-    }
-    else if (encoderPos == 65535) {
+      
+    } else if(encoderPos == 65535){
+      
       lcd.clear();
       encoderPos = 59;
+      
     }
 
     lcd.setCursor(0, 0);
     lcd.print(F("Start Minute:"));
     lcd.setCursor(0, 1);
-    if (encoderPos < 10)
-    {
+    
+    if(encoderPos < 10)
       lcd.print("0");
-    }
+
     lcd.print(encoderPos);
     lcd.print(F(" Min."));
-    if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-    {
+    
+    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      
       setings_a.startwassermin = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
       write_EEPROM = true;
       lcd.clear();
       screen = 16;
+      
     }
-  }
-
-  else if (screen == 16)
-  {
-    if (encoderPos == 60) {
+    
+  } else if(screen == 16){
+    
+    if(encoderPos == 60){
+      
       encoderPos = 0;
-    }
-    else if (encoderPos == 65535) {
+      
+    } else if(encoderPos == 65535){
+      
       lcd.clear();
       encoderPos = 59;
+      
     }
 
     lcd.setCursor(0, 0);
     lcd.print(F("Ende Minute:"));
     lcd.setCursor(0, 1);
-    if (encoderPos < 10)
-    {
+    
+    if(encoderPos < 10)
       lcd.print("0");
-    }
+
     lcd.print(encoderPos);
     lcd.print(F(" Min."));
-    if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-    {
+
+    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      
       setings_a.auswasser = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
       write_EEPROM = true;
       lcd.clear();
       screen = 17;
+      
     }
-  }
-
-  else if (screen == 17) {
-    if (encoderPos == 60) {
+    
+  } else if (screen == 17){
+    
+    if(encoderPos == 60){
+      
       encoderPos = 0;
-    }
-    else if (encoderPos == 65535) {
+      
+    } else if (encoderPos == 65535){
+      
       lcd.clear();
       encoderPos = 59;
+      
     }
 
     lcd.setCursor(0, 0);
     lcd.print(F("Dauer in Sekunden:"));
     lcd.setCursor(0, 1);
+    
     if (encoderPos < 10)
-    {
       lcd.print("0");
-    }
+ 
     lcd.print(encoderPos);
     lcd.print(F(" Sek."));
-    if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-    {
+ 
+    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      
       setings_a.sekauswasser = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
       write_EEPROM = true;
       lcd.clear();
       screen = 18;
+      
     }
-  }
-
-  else if (screen == 18) {
+    
+  } else if(screen == 18){
 
     lcd.setCursor(0, 0);
     lcd.print(F("Startzeit:"));
     lcd.setCursor(0, 1);
+    
     if (setings_a.startwasser < 10)
-    {
       lcd.print("0");
-    }
+
     lcd.print(setings_a.startwasser);
     lcd.print(":");
-    if (setings_a.startwassermin < 10)
-    {
+
+    if(setings_a.startwassermin < 10)
       lcd.print("0");
-    }
+
     lcd.print(setings_a.startwassermin);
     lcd.print(":00 Uhr");
     lcd.setCursor(0, 2);
     lcd.print(F("Ende:"));
     lcd.setCursor(0, 3);
-    if (setings_a.startwasser < 10)
-    {
+
+    if(setings_a.startwasser < 10)
       lcd.print("0");
-    }
+
     lcd.print(setings_a.startwasser);
     lcd.print(":");
-    if (setings_a.auswasser < 10)
-    {
+
+    if(setings_a.auswasser < 10)
       lcd.print("0");
-    }
+
     lcd.print(setings_a.auswasser);
     lcd.print(":");
-    if (setings_a.sekauswasser < 10)
-    {
+
+    if(setings_a.sekauswasser < 10)
       lcd.print("0");
-    }
+
     lcd.print(setings_a.sekauswasser);
 
-    if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
-    {
+    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      
       wechslertGedrueckt = 0;
       asm volatile ("jmp 0");
+      
     }
+    
   }
 
   updateEEPROM();
@@ -2021,5 +2204,6 @@ void updateEEPROM(){
     write_EEPROM = false;
 
   }
+
 }
 
