@@ -175,6 +175,7 @@ unsigned int lastReportedPos = 1;
 static boolean rotating = false;
 boolean A_set = false;
 boolean B_set = false;
+
 byte anaus = 0;
 byte temp_bereich = 0;
 byte rlf_bereich = 0;
@@ -1371,7 +1372,7 @@ void loop(){
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM = true;
         lcd.clear();
-        delay (100);
+        Alarm.delay(100);
         anaus = 0;
         screen = 4;
         
