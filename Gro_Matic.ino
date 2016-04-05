@@ -121,11 +121,10 @@ bool write_EEPROM = false;
 LiquidCrystal_I2C lcd(LED_ADDR, 2, 1, 0, 4, 5, 6, 7, BACKLIGHT_PIN, POSITIVE) ;
 
 // GY-30 Lux Meter
-int BH1750_address = 0x23;  // I2C Addresse des GY-30
-byte buff[2];
+#define BH1750_address 0x23  // I2C Addresse des GY-30
 
 //Backlight button
-const int buttonPin = 10;
+#define buttonPin 10
 int buttonState = LOW;
 byte buttonGedrueckt = 0;
 unsigned long buttonZeit = 0;  // Zeit beim drücken des Tasters
@@ -135,7 +134,7 @@ byte lcdbereinigen = 0;  // dispaly Clear funktion
 byte hintergrund = 1;    // schalte dispaly an menue
 //**************************************************************
 //Programm modus und resert Taster
-const int wechslertPin = A1;  // Pinnummer des Tasters für zum Lichtmodus wechseln und Eprom Reset
+#define wechslertPin A1  // Pinnummer des Tasters für zum Lichtmodus wechseln und Eprom Reset
 int wechslertStatus = LOW;  // aktuelles Signal vom Eingangspin des Wechslertasters
 byte wechslertGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
 unsigned int entprellZeit = 200;  // Zeit für Entprellung, anpassen!
@@ -159,7 +158,7 @@ int ventiicon = LOW;
 //**************************************************************
 // Ab hier LCD menue fuehrung und taster
 byte screen = 1;
-const int screenPin = 4;  // Pin für Taster zum umschalten der LCD seite
+#define screenPin 4  // Pin für Taster zum umschalten der LCD seite
 int screenStatus = LOW;  // aktuelles Signal vom Eingangspin
 byte screenGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
 unsigned long screenZeit = 0;  // Zeit beim drücken des Tasters
@@ -205,11 +204,11 @@ byte zeitstellen = 0;
 I2CSoilMoistureSensor bodensensor; // setze Var fuer Bodenfeuchtesensor (chirp)
 
 //**************************** Bekanntmachung der Relais
-const byte luft_relay = 9;  // luft_relay = LTI
-const byte licht_relay_p = 7; // licht_relay = zur Steuerung des Hauptleuchtmittels
-const byte lsr_relay_p = 6; // lsr_relay = zur Steuerung der LSR der Jungpflanzen
-const byte ventilator = 5; // vetilator = zur steuerung des Relais Umluftventilators
-const byte irrigation = 11; // wasser_relay = autobewaesserung
+#define luft_relay    9   // luft_relay = LTI
+#define licht_relay_p 7   // licht_relay = zur Steuerung des Hauptleuchtmittels
+#define lsr_relay_p   6   // lsr_relay = zur Steuerung der LSR der Jungpflanzen
+#define ventilator    5   // vetilator = zur steuerung des Relais Umluftventilators
+#define irrigation    11  // wasser_relay = autobewaesserung
 
 //**************************** GY-30 Luxmeter
 void BH1750_Init(int address){
@@ -220,10 +219,10 @@ void BH1750_Init(int address){
 
 }
 
-byte BH1750_Read(int address) {
+byte BH1750_Read(int address, byte *buff) {
 
   byte i = 0;
-  
+
   Wire.beginTransmission(address);
   Wire.requestFrom(address, 2);
   
@@ -390,8 +389,11 @@ void LTI() // die Funtion des Rohrventilators
 }
 void gy30() // Luxmeter
 { if (hintergrund == 1) {
+
+    byte buff[2];
+
     float valf = 0;
-    if (BH1750_Read(BH1750_address) == 2) {
+    if (BH1750_Read(BH1750_address, buff) == 2) {
 
       {
         valf = ((buff[0] << 8) | buff[1]);
@@ -583,9 +585,8 @@ void setup() {
 
 }
 
-//**************************** der Loop
-void loop()
-{
+void loop(){
+  
   //********************************************************************
   LTI();  // ruft die einfache LTI steuerung auf und prueft Temp und RLF und schaltet den Stufentrafo zwischen zwei Stufen.
   displaybeleuchtung();
@@ -888,7 +889,7 @@ void loop()
     }
 
 
-    // Wenn der Lichtmodus auf 3 sprngt, setzte ihn wieder zurück auf 0 um von vorne zu beginnen
+    // Wenn der Lichtmodus auf 3 springt, setzte ihn wieder zurück auf 0 um von vorne zu beginnen
     else
     {
       setings_a.lichtmodus = 0;
