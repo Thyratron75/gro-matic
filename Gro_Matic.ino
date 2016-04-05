@@ -125,9 +125,7 @@ LiquidCrystal_I2C lcd(LED_ADDR, 2, 1, 0, 4, 5, 6, 7, BACKLIGHT_PIN, POSITIVE) ;
 
 //Backlight button
 #define buttonPin 10
-int buttonState = LOW;
-byte buttonGedrueckt = 0;
-unsigned long buttonZeit = 0;  // Zeit beim drücken des Tasters
+
 //**************************************************************
 //Displayfunktionen
 byte lcdbereinigen = 0;  // dispaly Clear funktion
@@ -405,40 +403,44 @@ void gy30() // Luxmeter
   }
 }
 
-void displaybeleuchtung() // hier wird das Display ein und ausgeschaltet
-{ // lese ststus des display buttons und schalte wenn betätigt fuer 30 sek. an
-  buttonState = digitalRead(buttonPin);
+void displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
+
+  // Lese status des display buttons und schalte wenn betätigt fuer 30 sek. an
+  bool                 buttonState = digitalRead(buttonPin);
+  
+  static bool          buttonGedrueckt;
+  static unsigned long buttonZeit;
 
   // Wenn der Wechseltaster gedrückt ist...
-  if (buttonState == HIGH)
-  {
+  if(buttonState == HIGH){
+
     buttonZeit = millis();  // aktualisiere tasterZeit
-    buttonGedrueckt = 1;  // speichert, dass Taster gedrückt wurde
+    buttonGedrueckt = true; // speichert, dass Taster gedrückt wurde
+    
   }
 
   // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-  if ((millis() - buttonZeit > entprellZeit) && buttonGedrueckt == 1)
-  {
+  if((millis() - buttonZeit > entprellZeit) && buttonGedrueckt == 1){
+    
     hintergrund++;  // LCD Seite wird um +1 erhöht
-    buttonGedrueckt = 0;  // setzt gedrückten Taster zurück
+    buttonGedrueckt = false;  // setzt gedrückten Taster zurück
+    
   }
-  {
-    if (hintergrund == 1) // display ist an
 
-    {
-      lcd.display();
-      lcd.setBacklight(255);
-    }
+  if (hintergrund == 1){ // display ist an
+    
+    lcd.display();
+    lcd.setBacklight(255);
+      
+  } else if (hintergrund == 2){ // display ist ganz aus
+    
+    lcd.setBacklight(0);
+    lcd.noDisplay();
+    
+  } else if (hintergrund == 3){ // setzt die Funtion wieder auf anfang
+    
+    hintergrund = 1;
 
-    else if (hintergrund == 2) // display ist ganz aus
-    { lcd.setBacklight(0);
-      lcd.noDisplay();
-    }
-
-    else if (hintergrund == 3) // setzt die Funtion wieder auf anfang
-    {
-      hintergrund = 1;
-    }
   }
 }
 
