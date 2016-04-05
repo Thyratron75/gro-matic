@@ -388,7 +388,7 @@ void LTI(){ // die Funtion des Rohrventilators
   // Pruefe im Bloom Modus Temperatur und RLF ist die Temp unter 22 Grad C oder unter RLF unter 40%
   // bleibt Stufentrafo gedimmt (z.B. 80V)
   // ist Temp oder RLF gleich oder höher wird auf hoechste stufe (z.B. 190V) geschaltet.
-  if(setings_a.lichtmodus == 3){
+  if(setings_a.lichtmodus == BLOOM){
     
     if(ltitemp < setings_a.bloom_temp)
       digitalWrite(luft_relay, LOW);
