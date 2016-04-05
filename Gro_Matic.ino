@@ -235,8 +235,6 @@ byte BH1750_Read(int address, byte *buff) {
 
 }
 
-char sendeInhalt = ' ';
-
 //****************************hier gehen die einzelnen Funktionen los
 
 void displayTime(){ // anzeige der Zeit und Datum auf dem Display
@@ -533,7 +531,7 @@ void setup() {
   lcd.begin(20, 4); // stelle LCD groesse ein
   bme.begin();
 
-  setSyncProvider(RTC.get); // the function to get the time from the RTC
+  setSyncProvider(RTC.get); // Function to get the time from the RTC
   setSyncInterval(5000);    // Set the number of seconds between re-sync (5 Minuten)
 
   // Splashscreen
@@ -750,8 +748,6 @@ void loop(){
 
   //**************************** Autobewaesserung
 
-
-
   if (setings_a.autowasser == 1)
   {
 
@@ -832,52 +828,44 @@ void loop(){
     //*************************************Programm-Modis**************************************
 
     // Wenn Lichtmodus 0 ist, starte im LSR modus
-    if (setings_a.lichtmodus == 0)
-    {
+    if (setings_a.lichtmodus == LSR){
+      
       lcd.setCursor(10, 3);
       lcd.print(F("  LSR Mode"));
       relay_lsr_switching = digitalRead(lsr_relay_p);
-      if (relay_lsr_switching == LOW) {
+      
+      if (relay_lsr_switching == LOW){
+        
         lcd.setCursor(19, 2);
         lcd.write(2);
+        
       }
-      if (relay_lsr_switching == HIGH)
-      { lcd.setCursor(19, 2);
+      
+      if (relay_lsr_switching == HIGH){
+        
+        lcd.setCursor(19, 2);
         lcd.write(1);
+      
       }
-    }
-
-    else if (setings_a.lichtmodus == 1)
-    {
+      
+    } else if (setings_a.lichtmodus == GROW) {
+      
       lcd.setCursor(10, 3);
       lcd.print(F(" Grow Mode"));
       relay_grow_switching = digitalRead(licht_relay_p);
+      
       if (relay_grow_switching == LOW) {
         lcd.setCursor(19, 2);
         lcd.write(2);
       }
+      
       if (relay_grow_switching == HIGH) {
         lcd.setCursor(19, 2);
         lcd.write(1);
       }
-    }
-
-    else if (setings_a.lichtmodus == 2)
-    {
-      lcd.setCursor(10, 3);
-      lcd.print(F("Grow>Bloom"));
-      relay_bloom_switching = digitalRead(licht_relay_p);
-      if (relay_bloom_switching == LOW) {
-        lcd.setCursor(19, 2);
-        lcd.write(2);
-      }
-      if (relay_bloom_switching == HIGH) {
-        lcd.setCursor(19, 2);
-        lcd.write(1);
-      }
-    }
-    else if (setings_a.lichtmodus == 3)
-    {
+      
+    } else if (setings_a.lichtmodus == BLOOM) {
+      
       lcd.setCursor(10, 3);
       lcd.print(F("Bloom Mode"));
       relay_bloom_switching = digitalRead(licht_relay_p);
@@ -891,17 +879,14 @@ void loop(){
       }
     }
 
-
     // Wenn der Lichtmodus auf 3 springt, setzte ihn wieder zurück auf 0 um von vorne zu beginnen
-    else
-    {
-      setings_a.lichtmodus = 0;
-    }
-    // Lichtmodus Ende
+    else {
+      
+      setings_a.lichtmodus = LSR;
+      
+    } // Lichtmodus Ende
 
-  }
-  else if (screen == 2)
-  {
+  } else if (screen == 2){
 
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Tagecounter gelöscht werden ...
     if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
