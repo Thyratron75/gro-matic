@@ -802,7 +802,7 @@ void loop(){
     static bool ventiicon;
     static unsigned long  previousMillis;
     unsigned long         currentMillis = millis();
-    uint8_t               OnTime = 300;
+    const uint8_t               OnTime = 300;
     
     if (digitalRead(ventilator) == LOW) {
       if ((ventiicon == HIGH) && (currentMillis - previousMillis >= OnTime)) {
