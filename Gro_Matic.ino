@@ -463,17 +463,17 @@ void displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
     
   }
 
-  if (hintergrund == 1){ // display ist an
+  if(hintergrund == 1){ // display ist an
     
     lcd.display();
     lcd.setBacklight(255);
       
-  } else if (hintergrund == 2){ // display ist ganz aus
+  } else if(hintergrund == 2){ // display ist ganz aus
     
     lcd.setBacklight(0);
     lcd.noDisplay();
     
-  } else if (hintergrund == 3){ // setzt die Funtion wieder auf anfang
+  } else if(hintergrund == 3){ // setzt die Funtion wieder auf anfang
     
     hintergrund = 1;
 
@@ -538,7 +538,7 @@ void doEncoderB(){
     B_set = !B_set;
     
     //  stelle counter - 1 gegen Uhrzeigersinn
-    if ( B_set && !A_set )
+    if( B_set && !A_set )
       encoderPos -= 1;
       
     rotating = false;
@@ -672,7 +672,7 @@ void loop(){
 
   //***********************************************
 
-  if (setings_a.lichtmodus == LSR){
+  if(setings_a.lichtmodus == LSR){
 
     if((hour() >= setings_a.lsr_an) && (hour() < setings_a.lsr_aus)){
       
@@ -709,7 +709,7 @@ void loop(){
       
     }
 
-  } else if (setings_a.lichtmodus == GROW) {
+  } else if(setings_a.lichtmodus == GROW){
 
     if((hour() >= setings_a.grow_licht_an) && (hour() < setings_a.grow_licht_aus)){ 
       
@@ -1040,7 +1040,7 @@ void loop(){
     //*************************************Programm-Modis**************************************
 
     // Wenn Lichtmodus 0 ist, starte im LSR modus
-    if (setings_a.autowasser == true) {
+    if(setings_a.autowasser == true){
       
       lcd.setCursor(0, 2);
       lcd.print(F("Autobew"));
@@ -1081,7 +1081,7 @@ void loop(){
     lcd.print((char)223);
     lcd.print(F("C "));
 
-  } else if (screen == 4) {
+  } else if(screen == 4){
 
     lcd.setCursor(0, 0);
     lcd.print(F("Schaltzeiten Licht"));
@@ -1113,7 +1113,7 @@ void loop(){
       
     }
     
-  } else if(screen == 5) {
+  } else if(screen == 5){
 
     lcd.setCursor(0, 0);
     lcd.print(F("eingest. LTI Werte"));
@@ -1171,7 +1171,7 @@ void loop(){
       lcd.setCursor(0, 0);
       lcd.print(F("LSR an:    "));
       
-      if (encoderPos < 10){
+      if(encoderPos < 10){
         lcd.print("0");
       }
       
@@ -1205,7 +1205,7 @@ void loop(){
       lcd.setCursor(0, 0);
       lcd.print(F("LSR aus:   "));
       
-      if (encoderPos < 10)
+      if(encoderPos < 10)
         lcd.print("0");
  
       lcd.print(encoderPos);
@@ -1324,7 +1324,7 @@ void loop(){
       lcd.setCursor(0, 0);
       lcd.print(F("Bloom an:  "));
       
-      if (encoderPos < 10)
+      if(encoderPos < 10)
         lcd.print("0");
 
       lcd.print(encoderPos);
@@ -1397,7 +1397,7 @@ void loop(){
       
     }
 
-  }  else if(screen == 8) {
+  }  else if(screen == 8){
 
     if(encoderPos >= 29){
       
@@ -1556,7 +1556,7 @@ void loop(){
       lcd.setCursor(0, 2);
       lcd.print(F("zwischen 50 % - 55 %"));
       
-      if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
         
         setings_a.grow_rlf = (double) encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
@@ -1568,7 +1568,7 @@ void loop(){
       
     }
     
-    if (rlf_bereich == 2){
+    if(rlf_bereich == 2){
       
       lcd.setCursor(0, 0);
       lcd.print(F("Bloom max. "));
@@ -1674,7 +1674,7 @@ void loop(){
       lcd.print(encoderPos);
       lcd.print(F("."));
       
-      if (setmonat < 10)
+      if(setmonat < 10)
         lcd.print("0");
  
       lcd.print(setmonat);
@@ -1743,7 +1743,7 @@ void loop(){
         lcd.clear();
         encoderPos = 50;
         
-      } else if (encoderPos >= 51){
+      } else if(encoderPos >= 51){
         
         encoderPos = 16;
         
@@ -1753,13 +1753,13 @@ void loop(){
       lcd.print(F("Jahr einstellen:"));
       lcd.setCursor(0, 1);
       
-      if (settag < 10)
+      if(settag < 10)
         lcd.print("0");
 
       lcd.print(settag);
       lcd.print(F("."));
 
-      if (setmonat < 10)
+      if(setmonat < 10)
         lcd.print("0");
 
       lcd.print(setmonat);
@@ -1830,13 +1830,13 @@ void loop(){
       lcd.print(encoderPos);
       lcd.print(F(":"));
       
-      if (setminute < 10)
+      if(setminute < 10)
         lcd.print("0");
 
       lcd.print(setminute);
       lcd.print(F(":"));
 
-      if (setsekunde < 10)
+      if(setsekunde < 10)
         lcd.print("0");
 
       lcd.print(setsekunde);
@@ -1911,13 +1911,13 @@ void loop(){
       lcd.print(setstunde);
       lcd.print(F(":"));
       
-      if (setminute < 10)
+      if(setminute < 10)
         lcd.print("0");
 
       lcd.print(setminute);
       
       lcd.print(F(":"));
-      if (setsekunde < 10)
+      if(setsekunde < 10)
         lcd.print("0");
 
       lcd.print(setsekunde);
@@ -1930,7 +1930,7 @@ void loop(){
 
       lcd.print(F("."));
       
-      if (setmonat < 10)
+      if(setmonat < 10)
         lcd.print("0");
         
       lcd.print(setmonat);
@@ -1966,7 +1966,7 @@ void loop(){
       
       encoderPos = 1;
       
-    } else if (encoderPos < 0){
+    } else if(encoderPos < 0){
       
       lcd.clear();
       encoderPos = 0;
@@ -2106,13 +2106,13 @@ void loop(){
       
     }
     
-  } else if (screen == 17){
+  } else if(screen == 17){
     
     if(encoderPos == 60){
       
       encoderPos = 0;
       
-    } else if (encoderPos == 65535){
+    } else if(encoderPos == 65535){
       
       lcd.clear();
       encoderPos = 59;
@@ -2123,7 +2123,7 @@ void loop(){
     lcd.print(F("Dauer in Sekunden:"));
     lcd.setCursor(0, 1);
     
-    if (encoderPos < 10)
+    if(encoderPos < 10)
       lcd.print("0");
  
     lcd.print(encoderPos);
@@ -2145,7 +2145,7 @@ void loop(){
     lcd.print(F("Startzeit:"));
     lcd.setCursor(0, 1);
     
-    if (setings_a.startwasser < 10)
+    if(setings_a.startwasser < 10)
       lcd.print("0");
 
     lcd.print(setings_a.startwasser);
