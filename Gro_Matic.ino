@@ -149,12 +149,6 @@ byte relay_bloom_switching = 0;
 byte relay_grow_switching = 0;
 byte relay_lsr_switching = 0;
 
-//**************Anim Icons
-unsigned long previousMillis = 0;
-unsigned long OnTime1 = 300;
-unsigned long OnTime2 = 300;
-int ventiicon = LOW;
-
 //**************************************************************
 // Ab hier LCD menue fuehrung und taster
 byte screen = 1;
@@ -805,16 +799,20 @@ void loop(){
 
     //*********Ventilator Icon
 
-    unsigned long currentMillis = millis();
+    static bool ventiicon;
+    static unsigned long  previousMillis;
+    unsigned long         currentMillis = millis();
+    uint8_t               OnTime = 300;
+    
     if (digitalRead(ventilator) == LOW) {
-      if ((ventiicon == HIGH) && (currentMillis - previousMillis >= OnTime1)) {
+      if ((ventiicon == HIGH) && (currentMillis - previousMillis >= OnTime)) {
         ventiicon = LOW;
         previousMillis = currentMillis;
         lcd.setCursor(17, 2);
         lcd.write(7);
       }
 
-      if ((ventiicon == LOW) && (currentMillis - previousMillis >= OnTime2)) {
+      if ((ventiicon == LOW) && (currentMillis - previousMillis >= OnTime)) {
         ventiicon = HIGH;
         previousMillis = currentMillis;
         lcd.setCursor(17, 2);
