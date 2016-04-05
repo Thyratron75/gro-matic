@@ -185,8 +185,6 @@ int ltitemp;
 double ltirlf;
 int dsplrlf;
 Adafruit_BME280 bme; // I2C
-unsigned long vorhermillis = millis();
-unsigned long vorhermillislti = millis();
 
 //****************************Encoder
 #define encoderPinA 2
@@ -283,10 +281,14 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
   }
 }
 
-void bme280() // Anzeige der Temp und RLF auf dem Display
-{ if (hintergrund == 1) {
-    if (millis() - vorhermillis > 3000) {
-      vorhermillis = millis();
+void bme280(){ // Anzeige der Temp und RLF auf dem Display
+
+  if (hintergrund == 1){
+
+    static unsigned long m;
+  
+    if (millis() - m > 3000) {
+      m = millis();
       ltitemp = bme.readTemperature();
       dsplrlf = bme.readHumidity();
 
@@ -321,12 +323,13 @@ void DS3231temp(){  // hole und zeige auf dem Display die Case Temperatur der RT
 
 }
 
-void LTI() // die Funtion des Rohrventilators
-{ 
+void LTI(){ // die Funtion des Rohrventilators 
 
-  if (millis() - vorhermillislti > 10000)
+  static unsigned long m;
+
+  if (millis() - m > 10000)
   {
-    vorhermillislti = millis();
+    m = millis();
     ltitemp = bme.readTemperature();
     ltirlf = bme.readHumidity();
   }
