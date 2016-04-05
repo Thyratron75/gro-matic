@@ -60,7 +60,7 @@
 
 #include "Wire.h"                   // https://www.arduino.cc/en/Reference/Wire (included with Arduino IDE)
 #include "LiquidCrystal_I2C.h"      // https://bitbucket.org/fmalpartida/new-liquidcrystal
-#include "DS3231.h"                 // https://github.com/bpg/DS3231
+#include "DS3232RTC.h"              // https://github.com/JChristensen/DS3232RTC.git
 #include "EEPROM.h"                 // https://www.arduino.cc/en/Reference/EEPROM
 #include "I2CSoilMoistureSensor.h"  // https://github.com/Miceuz/i2c-moisture-sensor
 #include "Adafruit_Sensor.h"        // https://github.com/adafruit/Adafruit_Sensor
@@ -115,7 +115,6 @@ struct setings_t {
 
 bool write_EEPROM = false;
 
-#define DS3231_I2C_ADDRESS 0x68
 #define BACKLIGHT_PIN (3)
 #define LED_ADDR (0x27)  // might need to be 0x3F, if 0x27 doesn't work
 
@@ -204,10 +203,6 @@ byte rlf_bereich = 0;
 byte zeitstellen = 0;
 
 I2CSoilMoistureSensor bodensensor; // setze Var fuer Bodenfeuchtesensor (chirp)
-//*******************************************************************************
-
-DS3231 RTC;
-int tempC;
 
 //**************************** Bekanntmachung der Relais
 const byte luft_relay = 9;  // luft_relay = LTI
@@ -245,95 +240,46 @@ byte BH1750_Read(int address) {
 
 char sendeInhalt = ' ';
 
-//**************************** RTC funktionen
-
-// Convert normal decimal numbers to binary coded decimal
-byte decToBcd(byte val)
-{
-  return ( (val / 10 * 16) + (val % 10) );
-}
-// Convertiere binaeren dezimal code zu normalen dezimal nummern
-byte bcdToDec(byte val)
-{
-  return ( (val / 16 * 10) + (val % 16) );
-}
-
-void readDS3231time(byte *second, byte *minute, byte *hour, byte *dayOfWeek, byte *dayOfMonth, byte *month, byte *year){
-  
-  Wire.beginTransmission(DS3231_I2C_ADDRESS);
-  Wire.write(0);        // setze DS3231 register pointer zu 00h
-  Wire.endTransmission();
-  Wire.requestFrom(DS3231_I2C_ADDRESS, 7);
-  
-  *second = bcdToDec(Wire.read() & 0x7f);
-  *minute = bcdToDec(Wire.read());
-  *hour = bcdToDec(Wire.read() & 0x3f);
-  *dayOfWeek = bcdToDec(Wire.read());
-  *dayOfMonth = bcdToDec(Wire.read());
-  *month = bcdToDec(Wire.read());
-  *year = bcdToDec(Wire.read());
-
-}
-
-void setDS3231time(byte second, byte minute, byte hour, byte dayOfWeek, byte dayOfMonth, byte month, byte year){
-  
-  // sets time and date data to DS3231
-  Wire.beginTransmission(DS3231_I2C_ADDRESS);
-  Wire.write(0); // set next input to start at the seconds register
-  Wire.write(decToBcd(second)); // set seconds
-  Wire.write(decToBcd(minute)); // set minutes
-  Wire.write(decToBcd(hour)); // set hours
-  Wire.write(decToBcd(dayOfWeek)); // set day of week (1=Sunday, 7=Saturday)
-  Wire.write(decToBcd(dayOfMonth)); // set date (1 to 31)
-  Wire.write(decToBcd(month)); // set month
-  Wire.write(decToBcd(year)); // set year (0 to 99)
-  Wire.endTransmission();
-
-}
-
 //****************************hier gehen die einzelnen Funktionen los
 
 void displayTime(){ // anzeige der Zeit und Datum auf dem Display
   
   if (hintergrund == 1) {
-    byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
-    // hole daten von DS3231
-    readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
 
     lcd.setCursor(0, 0);
     
-    if (hour < 10)
+    if (hour() < 10)
       lcd.print("0");
  
-    lcd.print(hour, DEC);
+    lcd.print(hour(), DEC);
     
     lcd.print(":");
     
-    if (minute < 10)
+    if (minute() < 10)
       lcd.print("0");
       
-    lcd.print(minute, DEC);
+    lcd.print(minute(), DEC);
     
     lcd.print(":");
-    if (second < 10)
+    if (second() < 10)
       lcd.print("0");
 
-    lcd.print(second, DEC);
+    lcd.print(second(), DEC);
     lcd.print(" ");
 
     const char c_dayOfWeek[7][3]={ "So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
-    lcd.print(c_dayOfWeek[dayOfWeek]);
+    lcd.print(c_dayOfWeek[weekday()]);
     
     lcd.print(" ");
-    if (dayOfMonth < 10)
+    if (day() < 10)
     {
       lcd.print("0");
     }
-    lcd.print(dayOfMonth, DEC);
+    lcd.print(day(), DEC);
     lcd.print(" ");
  
     const char C_Mounth[12][4]={ "Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Mov", "Dec"};
-    lcd.print(C_Mounth[month]);
+    lcd.print(C_Mounth[month()]);
 
   }
 }
@@ -362,22 +308,23 @@ void bme280() // Anzeige der Temp und RLF auf dem Display
   }
 }
 
-void DS3231temp()  // hole und zeige auf dem Display die Case Temperatur der RTC
-{ if (hintergrund == 1) {
-    tempC = RTC.getTemperature();
+void DS3231temp(){  // hole und zeige auf dem Display die Case Temperatur der RTC
+
+  if (hintergrund == 1) {
 
     lcd.setCursor(0, 3);
     lcd.print(F("Case:"));
-    lcd.print(tempC);
+    lcd.print(RTC.temperature());
     lcd.print((char)223);
     lcd.print(F("C"));
+    
   }
+
 }
 
 void LTI() // die Funtion des Rohrventilators
-{ byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
-  // hole daten von DS3231
-  readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
+{ 
+
   if (millis() - vorhermillislti > 10000)
   {
     vorhermillislti = millis();
@@ -581,6 +528,9 @@ void setup() {
   lcd.begin(20, 4); // stelle LCD groesse ein
   bme.begin();
 
+  setSyncProvider(RTC.get); // the function to get the time from the RTC
+  setSyncInterval(5000);    // Set the number of seconds between re-sync (5 Minuten)
+
   // Splashscreen
   lcd.setCursor(0, 0);
   lcd.print(F("..:: Gro-Matic ::.."));
@@ -593,14 +543,6 @@ void setup() {
 
   BH1750_Init(BH1750_address);
   Alarm.delay(500);
-
-  byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
-  // hole daten von DS3231
-  readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
-
-  letztertag = (dayOfMonth);
-  letztermonat = (month);
-  setTime(hour, minute, second, dayOfMonth, month, year);
 
   digitalWrite(licht_relay_p, HIGH);  // alle Relais Pins beim Start auf HIGH setzen und damit ausschalten.
   digitalWrite(lsr_relay_p, HIGH);
@@ -667,26 +609,17 @@ void loop()
     
   }
 
-
-  byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
-  // hole daten von DS3231
-  readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
-
   //***********************************************
 
   if (setings_a.lichtmodus == 0)
   {
-    byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
-    // hole daten von DS3231
-    readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
 
-
-    if ((hour >= setings_a.lsr_an) && (hour < setings_a.lsr_aus))
+    if ((hour() >= setings_a.lsr_an) && (hour() < setings_a.lsr_aus))
     { digitalWrite(lsr_relay_p, LOW); //schaltet lsr um 5 Uhr an und um 22:59:59 Uhr aus
       digitalWrite(licht_relay_p, HIGH); //schaltet ndl Relais aus sollten sie noch an sein
 
       // Umluftventilator alle 15 minuten einschalten wenn licht an
-      if ( (minute >= 15 && minute <= 29 ) || (minute >= 45 && minute <= 59))
+      if ( (minute() >= 15 && minute() <= 29 ) || (minute() >= 45 && minute() <= 59))
       {
         digitalWrite(ventilator, LOW);
       }
@@ -699,9 +632,9 @@ void loop()
 
     else
     { digitalWrite(lsr_relay_p, HIGH);
-      if ( (hour >= setings_a.grow_licht_aus) & (hour < setings_a.grow_licht_an) || (hour >= setings_a.bloom_licht_aus) & (hour <= setings_a.bloom_licht_an))
+      if ( (hour() >= setings_a.grow_licht_aus) & (hour() < setings_a.grow_licht_an) || (hour() >= setings_a.bloom_licht_aus) & (hour() <= setings_a.bloom_licht_an))
         digitalWrite(licht_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
-      if ((minute >= 15) && (minute <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
+      if ((minute() >= 15) && (minute() <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
       {
         digitalWrite(ventilator, LOW);
       }
@@ -715,17 +648,13 @@ void loop()
 
   else if (setings_a.lichtmodus == 1)
   {
-    byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
-    // hole daten von DS3231
-    readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
 
-
-    if ((hour >= setings_a.grow_licht_an) && (hour < setings_a.grow_licht_aus))
+    if ((hour() >= setings_a.grow_licht_an) && (hour() < setings_a.grow_licht_aus))
     { digitalWrite(licht_relay_p, LOW); //schaltet ndl im Grow modus 18h licht um 5 Uhr an und um 22:59:59 Uhr aus
       digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
 
       // Umluftventilator alle 15 minuten einschalten wenn licht an
-      if ( (minute >= 15 && minute <= 29 ) || (minute >= 45 && minute <= 59) )
+      if ( (minute() >= 15 && minute() <= 29 ) || (minute() >= 45 && minute() <= 59) )
       {
         digitalWrite(ventilator, LOW);
       }
@@ -738,9 +667,9 @@ void loop()
 
     else
     { digitalWrite(licht_relay_p, HIGH);
-      if ( (hour >= setings_a.lsr_aus) & (hour < setings_a.lsr_an) )
+      if ( (hour() >= setings_a.lsr_aus) & (hour() < setings_a.lsr_an) )
         digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
-      if ((minute >= 15) && (minute <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
+      if ((minute() >= 15) && (minute() <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
       {
         digitalWrite(ventilator, LOW);
       }
@@ -754,15 +683,12 @@ void loop()
 
   else if (setings_a.lichtmodus == 2)
   {
-    byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
-    // hole daten von DS3231
-    readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
 
-    if ((hour >= setings_a.grow_licht_an) && (hour < setings_a.grow_licht_aus))
+    if ((hour() >= setings_a.grow_licht_an) && (hour() < setings_a.grow_licht_aus))
     { digitalWrite(licht_relay_p, LOW); //schaltet ndl im Grow modus 18h licht um 5 Uhr an und um 22:59:59 Uhr aus
       digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
       // Umluftventilator alle 15 minuten einschalten wenn licht an
-      if ( (minute >= 15 &&  minute <= 29) || (minute >= 45 && minute <= 59) )
+      if ( (minute() >= 15 &&  minute() <= 29) || (minute() >= 45 && minute() <= 59) )
       {
         digitalWrite(ventilator, LOW);
       }
@@ -780,17 +706,14 @@ void loop()
 
   else if (setings_a.lichtmodus == 3)
   {
-    byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
-    // hole daten von DS3231
-    readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
     tagec();
 
-    if ((hour >= setings_a.bloom_licht_an) && (hour < setings_a.bloom_licht_aus))
+    if ((hour() >= setings_a.bloom_licht_an) && (hour() < setings_a.bloom_licht_aus))
     { digitalWrite(licht_relay_p, LOW); //schaltet ndl im Bloom modus 12h licht um 5 Uhr an und um 16:59:59 Uhr aus
       digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
 
       // Umluftventilator alle 15 minuten einschalten wenn licht an
-      if ( (minute >= 15 && minute <= 29 ) || (minute >= 45 && minute <= 59) )
+      if ( (minute() >= 15 && minute() <= 29 ) || (minute() >= 45 && minute() <= 59) )
       {
         digitalWrite(ventilator, LOW);
       }
@@ -804,9 +727,9 @@ void loop()
 
     else
     { digitalWrite(licht_relay_p, HIGH);
-      if ( (hour >= setings_a.grow_licht_aus) & (hour < setings_a.grow_licht_an) || (hour >= setings_a.lsr_aus) & (hour < setings_a.lsr_an) )
+      if ( (hour() >= setings_a.grow_licht_aus) & (hour() < setings_a.grow_licht_an) || (hour() >= setings_a.lsr_aus) & (hour() < setings_a.lsr_an) )
         digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
-      if ((minute >= 15) && (minute <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
+      if ((minute() >= 15) && (minute() <= 19)) // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
       {
         digitalWrite(ventilator, LOW);
       }
@@ -868,10 +791,7 @@ void loop()
     gy30();  // Luxmeter
 
     //GY-30
-    byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
-    // hole daten von DS3231
-    readDS3231time(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
-    if (second >= 0) {
+    if (second() >= 0) {
       void BH1750_Init(int address);
     }
 
@@ -1250,7 +1170,7 @@ void loop()
       {
         setings_a.grow_licht_an = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        write_EEPROM = false;
+        write_EEPROM = true;
         lcd.clear();
         anaus++;
       }
@@ -1875,7 +1795,13 @@ void loop()
       if ((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1)
       {
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        setDS3231time(setsekunde, setminute, setstunde, settagderwoche, settag, setmonat, setjahr);
+
+        // Set system time.
+        setTime( setstunde, setminute, setsekunde, settag, setmonat, setjahr);
+
+        // Set RTC time from system time.
+        RTC.set(now());
+
         lcd.clear();
         screen = 1;
       }
