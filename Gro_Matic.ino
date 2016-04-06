@@ -1758,37 +1758,6 @@ void loop(){
 
     if(zeitstellen == 3){
       
-      if(encoderPos >= 8){
-        
-        encoderPos = 1;
-        
-      } else if(encoderPos <= 0){
-        
-        lcd.clear();
-        encoderPos = 7;
-        
-      }
-      
-      lcd.setCursor(0, 0);
-      lcd.print(F("Tag der Woche"));
-      lcd.setCursor(0, 1);
-      
-      const char c_dayOfWeek[7][11]={ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"};
-      lcd.print(c_dayOfWeek[encoderPos]);
-
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
-        
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        //tm.weekday = encoderPos;
-        lcd.clear();
-        zeitstellen++;
-        
-      }
-
-    }
-
-    if(zeitstellen == 4){
-      
       if(encoderPos == 24)
         encoderPos = 0;
  
@@ -1831,7 +1800,7 @@ void loop(){
 
     }
 
-    if(zeitstellen == 5){
+    if(zeitstellen == 4){
       
       if(encoderPos == 60){
        
@@ -1875,7 +1844,7 @@ void loop(){
 
     }
 
-    if(zeitstellen == 6){
+    if(zeitstellen == 5){
       
       lcd.setCursor(0, 0);
 
