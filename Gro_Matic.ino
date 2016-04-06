@@ -132,7 +132,7 @@ byte hintergrund = 1;    // schalte dispaly an menue
 //Programm modus und reset Taster
 #define wechslertPin A1  // Pinnummer des Tasters für zum Lichtmodus wechseln und Eprom Reset
 
-byte wechslertGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
+bool wechslertGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
 #define entprellZeit 200  // Zeit für Entprellung, anpassen!
 unsigned long wechslertZeit = 0;  // Zeit beim drücken des Tasters
 
@@ -247,7 +247,7 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
     lcd.print(second(), DEC);
     lcd.print(" ");
 
-    const char c_dayOfWeek[7][3]={ "So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
+    const char c_dayOfWeek[7][3]={"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
     lcd.print(c_dayOfWeek[weekday()]);
     
     lcd.print(" ");
@@ -258,8 +258,8 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
     lcd.print(day(), DEC);
     lcd.print(" ");
  
-    const char C_Mounth[12][4]={ "Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Mov", "Dec"};
-    lcd.print(C_Mounth[month()]);
+    const char c_Month[12][4]={"Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Mov", "Dec"};
+    lcd.print(c_Month[month()]);
 
   }
 
@@ -477,14 +477,15 @@ void displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
 }
 
 // Custom Caracter
-byte moon[8]      = { 0b00000, 0b01110, 0b10101, 0b11111, 0b10001, 0b01110, 0b00000, 0b00000 };
-byte sun[8]       = { 0b00000, 0b00100, 0b10101, 0b01110, 0b01110, 0b10101, 0b00100, 0b00000 };
-byte thermo[8]    = { 0b00100, 0b01010, 0b01010, 0b01110, 0b01110, 0b11111, 0b11111, 0b01110 };
-byte rlf[8]       = { 0b00100, 0b00100, 0b01110, 0b01110, 0b11111, 0b11001, 0b11111, 0b01110 };
-byte water_on[8]  = { 0b11100, 0b01000, 0b11110, 0b11111, 0b00011, 0b00011, 0b00000, 0b00011 };
-byte water_off[8] = { 0b11100, 0b01000, 0b11100, 0b11110, 0b00011, 0b00011, 0b00000, 0b00000 };
-byte venti_I[8]   = { 0b00100, 0b01010, 0b00000, 0b00100, 0b10001, 0b11011, 0b00000, 0b00000 };
-byte venti_II[8]  = { 0b00000, 0b11011, 0b10001, 0b00100, 0b00000, 0b01010, 0b00100, 0b00000 };
+enum { moon, sun, thermo, rlf, water_on, water_off, venti_I, venti_II };
+byte Moon[8]      = { 0b00000, 0b01110, 0b10101, 0b11111, 0b10001, 0b01110, 0b00000, 0b00000 };
+byte Sun[8]       = { 0b00000, 0b00100, 0b10101, 0b01110, 0b01110, 0b10101, 0b00100, 0b00000 };
+byte Thermo[8]    = { 0b00100, 0b01010, 0b01010, 0b01110, 0b01110, 0b11111, 0b11111, 0b01110 };
+byte Rlf[8]       = { 0b00100, 0b00100, 0b01110, 0b01110, 0b11111, 0b11001, 0b11111, 0b01110 };
+byte Water_on[8]  = { 0b11100, 0b01000, 0b11110, 0b11111, 0b00011, 0b00011, 0b00000, 0b00011 };
+byte Water_off[8] = { 0b11100, 0b01000, 0b11100, 0b11110, 0b00011, 0b00011, 0b00000, 0b00000 };
+byte Venti_I[8]   = { 0b00100, 0b01010, 0b00000, 0b00100, 0b10001, 0b11011, 0b00000, 0b00000 };
+byte Venti_II[8]  = { 0b00000, 0b11011, 0b10001, 0b00100, 0b00000, 0b01010, 0b00100, 0b00000 };
 
 void tagec(){ // bluete Tagecounter
 
@@ -626,14 +627,14 @@ void setup(){
   attachInterrupt(1, doEncoderB, CHANGE); // Encoder pin an interrupt 1 (pin 3)
 
   // erstelle die Custom character
-  lcd.createChar(1, moon);
-  lcd.createChar(2, sun);
-  lcd.createChar(3, thermo);
-  lcd.createChar(4, rlf);
-  lcd.createChar(5, water_on);
-  lcd.createChar(6, water_off);
-  lcd.createChar(7, venti_I);
-  lcd.createChar(8, venti_II);
+  lcd.createChar(moon,      Moon);
+  lcd.createChar(sun,       Sun);
+  lcd.createChar(thermo,    Thermo);
+  lcd.createChar(rlf,       Rlf);
+  lcd.createChar(water_on,  Water_on);
+  lcd.createChar(water_off, Water_off);
+  lcd.createChar(venti_I,   Venti_I);
+  lcd.createChar(venti_II,  Venti_II);
 
 //  Alarm.alarmRepeat(startwasser, startwassermin, 0, startzeitwassern); // 8:30am every day
 //  Alarm.alarmRepeat(startwasser, auswasser, sekauswasser, endzeitwassern); // 5:45pm every day
@@ -872,7 +873,7 @@ void loop(){
         ventiicon = LOW;
         previousMillis = currentMillis;
         lcd.setCursor(17, 2);
-        lcd.write(7);
+        lcd.write(venti_I);
         
       }
 
@@ -881,7 +882,7 @@ void loop(){
         ventiicon = HIGH;
         previousMillis = currentMillis;
         lcd.setCursor(17, 2);
-        lcd.write(8);
+        lcd.write(venti_II);
         
       }
     }
