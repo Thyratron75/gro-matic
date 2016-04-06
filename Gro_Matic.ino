@@ -166,7 +166,7 @@ Adafruit_BME280 bme; // I2C
 #define encoderPinB 3
 volatile unsigned int encoderPos = 0;  // Encoder counter
 unsigned int lastReportedPos = 1;
-bool rotating = false;
+volatile bool rotating = false;
 boolean A_set = false;
 boolean B_set = false;
 
