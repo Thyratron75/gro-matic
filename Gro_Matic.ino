@@ -165,10 +165,10 @@ Adafruit_BME280 bme; // I2C
 #define encoderPinA 2
 #define encoderPinB 3
 volatile unsigned int encoderPos = 0;  // Encoder counter
+volatile bool rotating  = false;
+volatile bool A_set     = false;
+volatile bool B_set     = false;
 unsigned int lastReportedPos = 1;
-volatile bool rotating = false;
-volatile boolean A_set = false;
-volatile boolean B_set = false;
 
 byte anaus = 0;
 byte temp_bereich = 0;
@@ -631,9 +631,6 @@ void setup(){
   lcd.createChar(WATER_OFF, Water_off);
   lcd.createChar(VENTI_I,   Venti_I);
   lcd.createChar(VENTI_II,  Venti_II);
-
-//  Alarm.alarmRepeat(startwasser, startwassermin, 0, startzeitwassern); // 8:30am every day
-//  Alarm.alarmRepeat(startwasser, auswasser, sekauswasser, endzeitwassern); // 5:45pm every day
 
 }
 
