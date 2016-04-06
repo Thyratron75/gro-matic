@@ -315,7 +315,7 @@ void DS3231temp(){  // hole und zeige auf dem Display die Case Temperatur der RT
 
     lcd.setCursor(0, 3);
     lcd.print(F("Case:"));
-    lcd.print(RTC.temperature());
+    lcd.print(RTC.temperature() / 4);
     lcd.print((char)223);
     lcd.print(F("C"));
     
@@ -872,7 +872,7 @@ void loop(){
     static bool           ventiicon;
     static unsigned long  previousMillis;
     unsigned long         currentMillis = millis();
-    const uint8_t         OnTime = 300;
+    const unsigned long   OnTime = 300;
     
     if(digitalRead(ventilator) == LOW){
       
