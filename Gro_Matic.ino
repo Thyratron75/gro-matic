@@ -190,6 +190,17 @@ I2CSoilMoistureSensor bodensensor; // setze Var fuer Bodenfeuchtesensor (chirp)
 #define ventilator    5   // vetilator = zur steuerung des Relais Umluftventilators
 #define irrigation    11  // wasser_relay = autobewaesserung
 
+// Custom Caracter
+enum { MOON, SUN, THERMO, RLF, WATER_ON, WATER_OFF, VENTI_I, VENTI_II };
+byte Moon[8]      = { 0b00000, 0b01110, 0b10101, 0b11111, 0b10001, 0b01110, 0b00000, 0b00000 };
+byte Sun[8]       = { 0b00000, 0b00100, 0b10101, 0b01110, 0b01110, 0b10101, 0b00100, 0b00000 };
+byte Thermo[8]    = { 0b00100, 0b01010, 0b01010, 0b01110, 0b01110, 0b11111, 0b11111, 0b01110 };
+byte Rlf[8]       = { 0b00100, 0b00100, 0b01110, 0b01110, 0b11111, 0b11001, 0b11111, 0b01110 };
+byte Water_on[8]  = { 0b11100, 0b01000, 0b11110, 0b11111, 0b00011, 0b00011, 0b00000, 0b00011 };
+byte Water_off[8] = { 0b11100, 0b01000, 0b11100, 0b11110, 0b00011, 0b00011, 0b00000, 0b00000 };
+byte Venti_I[8]   = { 0b00100, 0b01010, 0b00000, 0b00100, 0b10001, 0b11011, 0b00000, 0b00000 };
+byte Venti_II[8]  = { 0b00000, 0b11011, 0b10001, 0b00100, 0b00000, 0b01010, 0b00100, 0b00000 };
+
 // GY-30 Luxmeter
 void BH1750_Init(int address){
 
@@ -279,13 +290,13 @@ void bme280(){ // Anzeige der Temp und RLF auf dem Display
 
       // DISPLAY DATA
       lcd.setCursor(0, 1);           // setze curserposition
-      lcd.write(3);    // zeichne thermometer auf dem Display, siehe auch abschnitt Custom Caracter bzw. void setup
+      lcd.write(THERMO);    // zeichne thermometer auf dem Display, siehe auch abschnitt Custom Caracter bzw. void setup
       lcd.print(F(" "));
       lcd.print(int(ltitemp));
       lcd.print((char)223);
       lcd.print(F("C "));
       lcd.print(F(" "));
-      lcd.write(4);    // zeichne Wassertropfen auf dem Display, siehe auch abschnitt Custom Caracter bzw. void setup
+      lcd.write(RLF);    // zeichne Wassertropfen auf dem Display, siehe auch abschnitt Custom Caracter bzw. void setup
       lcd.print(F(" "));
       lcd.print(int(dsplrlf));
       lcd.print(F("%"));
@@ -476,17 +487,6 @@ void displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
   
 }
 
-// Custom Caracter
-enum { MOON, SUN, THERMO, RLF, WATER_ON, WATER_OFF, VENTI_I, VENTI_II };
-byte Moon[8]      = { 0b00000, 0b01110, 0b10101, 0b11111, 0b10001, 0b01110, 0b00000, 0b00000 };
-byte Sun[8]       = { 0b00000, 0b00100, 0b10101, 0b01110, 0b01110, 0b10101, 0b00100, 0b00000 };
-byte Thermo[8]    = { 0b00100, 0b01010, 0b01010, 0b01110, 0b01110, 0b11111, 0b11111, 0b01110 };
-byte Rlf[8]       = { 0b00100, 0b00100, 0b01110, 0b01110, 0b11111, 0b11001, 0b11111, 0b01110 };
-byte Water_on[8]  = { 0b11100, 0b01000, 0b11110, 0b11111, 0b00011, 0b00011, 0b00000, 0b00011 };
-byte Water_off[8] = { 0b11100, 0b01000, 0b11100, 0b11110, 0b00011, 0b00011, 0b00000, 0b00000 };
-byte Venti_I[8]   = { 0b00100, 0b01010, 0b00000, 0b00100, 0b10001, 0b11011, 0b00000, 0b00000 };
-byte Venti_II[8]  = { 0b00000, 0b11011, 0b10001, 0b00100, 0b00000, 0b01010, 0b00100, 0b00000 };
-
 void tagec(){ // bluete Tagecounter
 
   bool relay_switching = digitalRead(licht_relay_p);
@@ -506,7 +506,7 @@ void tagec(){ // bluete Tagecounter
 }
 
 void doEncoderA(){
-  
+
   if(rotating)
     delay(1);  // debounce für Encoder Pin A
     
@@ -906,14 +906,14 @@ void loop(){
       if(relay_lsr_switching == LOW){
         
         lcd.setCursor(19, 2);
-        lcd.write(2);
+        lcd.write(SUN);
         
       }
       
       if(relay_lsr_switching == HIGH){
         
         lcd.setCursor(19, 2);
-        lcd.write(1);
+        lcd.write(MOON);
       
       }
       
@@ -926,14 +926,14 @@ void loop(){
       if(relay_grow_switching == LOW){
         
         lcd.setCursor(19, 2);
-        lcd.write(2);
+        lcd.write(SUN);
         
       }
       
       if(relay_grow_switching == HIGH){
         
         lcd.setCursor(19, 2);
-        lcd.write(1);
+        lcd.write(MOON);
         
       }
       
@@ -946,14 +946,14 @@ void loop(){
       if(relay_bloom_switching == LOW){
         
         lcd.setCursor(19, 2);
-        lcd.write(2);
+        lcd.write(SUN);
         
       }
       
       if(relay_bloom_switching == HIGH){
         
         lcd.setCursor(19, 2);
-        lcd.write(1);
+        lcd.write(MOON);
         
       }
       
@@ -1031,7 +1031,7 @@ void loop(){
       lcd.print((char)0xE1);
       lcd.print(F("sserung:"));
       lcd.setCursor(0, 3);
-      lcd.write(6);
+      lcd.write(WATER_OFF);
       lcd.print(F(" aus"));
       
     } else if(setings_a.autowasser == false){
@@ -1041,7 +1041,7 @@ void loop(){
       lcd.print((char)0xE1);
       lcd.print(F("sserung:"));
       lcd.setCursor(0, 3);
-      lcd.write(5);
+      lcd.write(WATER_ON);
       lcd.print(F(" an "));
       
     } else {
@@ -1054,12 +1054,12 @@ void loop(){
 
     lcd.setCursor(0, 0);
     lcd.print(F("Boden "));
-    lcd.write(4);
+    lcd.write(RLF);
     lcd.print(F(" "));
     lcd.print(bodensensor.getCapacitance()); //lese bodensensor
     lcd.setCursor(0, 1);
     lcd.print(F("Boden "));
-    lcd.write(3);
+    lcd.write(THERMO);
     lcd.print(F(" "));
     lcd.print(bodensensor.getTemperature() / (float)10); //lese temperatur register des bodensensors
     lcd.print((char)223);
@@ -1400,7 +1400,7 @@ void loop(){
       
       lcd.setCursor(0, 0);
       lcd.print(F("LSR max. "));
-      lcd.write(3);
+      lcd.write(THERMO);
       lcd.print(F(" :  "));
       lcd.print(encoderPos);
       lcd.print((char)223);
@@ -1431,7 +1431,7 @@ void loop(){
       
       lcd.setCursor(0, 0);
       lcd.print(F("Grow max. "));
-      lcd.write(3);
+      lcd.write(THERMO);
       lcd.print(F(" : "));
       lcd.print(encoderPos);
       lcd.print((char)223);
@@ -1462,7 +1462,7 @@ void loop(){
       
       lcd.setCursor(0, 0);
       lcd.print(F("Bloom max. "));
-      lcd.write(3);
+      lcd.write(THERMO);
       lcd.print(F(" :"));
       lcd.print(encoderPos);
       lcd.print((char)223);
@@ -1506,7 +1506,7 @@ void loop(){
       
       lcd.setCursor(0, 0);
       lcd.print(F("LSR max. "));
-      lcd.write(4);
+      lcd.write(RLF);
       lcd.print(F(" : "));
       lcd.print(encoderPos);
       lcd.print(F(" %"));
@@ -1531,7 +1531,7 @@ void loop(){
       
       lcd.setCursor(0, 0);
       lcd.print(F("Grow max. "));
-      lcd.write(4);
+      lcd.write(RLF);
       lcd.print(F(" : "));
       lcd.print(encoderPos);
       lcd.print(F(" %"));
@@ -1556,7 +1556,7 @@ void loop(){
       
       lcd.setCursor(0, 0);
       lcd.print(F("Bloom max. "));
-      lcd.write(4);
+      lcd.write(RLF);
       lcd.print(F(" : "));
       lcd.print(encoderPos);
       lcd.print(F(" %"));
