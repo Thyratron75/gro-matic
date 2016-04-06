@@ -156,9 +156,6 @@ byte letztermonat = 0;
 tmElements_t tm;
 
 // BME 280
-double ltitemp;
-double ltirlf;
-double dsplrlf;
 Adafruit_BME280 bme; // I2C
 
 // Encoder
@@ -279,20 +276,18 @@ void bme280(){ // Anzeige der Temp und RLF auf dem Display
     if(millis() - m > 3000){
       
       m = millis();
-      ltitemp = bme.readTemperature();
-      dsplrlf = bme.readHumidity();
 
       // DISPLAY DATA
       lcd.setCursor(0, 1);           // setze curserposition
       lcd.write(THERMO);    // zeichne thermometer auf dem Display, siehe auch abschnitt Custom Caracter bzw. void setup
       lcd.print(F(" "));
-      lcd.print(int(ltitemp));
+      lcd.print(int(bme.readTemperature()));
       lcd.print((char)223);
       lcd.print(F("C "));
       lcd.print(F(" "));
       lcd.write(RLF);    // zeichne Wassertropfen auf dem Display, siehe auch abschnitt Custom Caracter bzw. void setup
       lcd.print(F(" "));
-      lcd.print(int(dsplrlf));
+      lcd.print(int(bme.readHumidity()));
       lcd.print(F("%"));
       lcd.print(F("   "));
       
@@ -319,6 +314,9 @@ void DS3231temp(){  // hole und zeige auf dem Display die Case Temperatur der RT
 void LTI(){ // die Funtion des Rohrventilators 
 
   static unsigned long m;
+
+  static double ltitemp;
+  static double ltirlf;
 
   if(millis() - m > 10000){
     
@@ -411,7 +409,7 @@ void LTI(){ // die Funtion des Rohrventilators
 
 void gy30(){ // Luxmeter
   
-if(hintergrund == 1){
+  if(hintergrund == 1){
 
     byte buff[2];
     float valf = 0;
@@ -639,8 +637,6 @@ void loop(){
   //********************************************************************
   LTI();  // ruft die einfache LTI steuerung auf und prueft Temp und RLF und schaltet den Stufentrafo zwischen zwei Stufen.
   displaybeleuchtung();
-  ltitemp = bme.readTemperature();
-  dsplrlf = bme.readHumidity();
   Alarm.delay(0);
   //********************************************************************
   rotating = true;  // reset the debouncer
@@ -973,20 +969,14 @@ void loop(){
     lcd.setCursor(0, 0);
     lcd.print(F("Starttag am: "));
     
-    if(letztertag < 10){
-      
+    if(letztertag < 10)  
       lcd.print(F("0"));
-      
-    }
     
     lcd.print(letztertag);
     lcd.print(F("."));
     
-    if(letztermonat < 10){
-      
+    if(letztermonat < 10)
       lcd.print(F("0"));
-      
-    }
     
     lcd.print(letztermonat);
     lcd.setCursor(0, 1);
@@ -1041,9 +1031,7 @@ void loop(){
       
       setings_a.autowasser = true;
       
-    }
-
-    // Autobewaesserung Ende
+    } // Autobewaesserung Ende
 
     lcd.setCursor(0, 0);
     lcd.print(F("Boden "));
@@ -1210,6 +1198,7 @@ void loop(){
           setings_a.lsr_aus = encoderPos;
         
         }
+        
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         
         write_EEPROM = true;
@@ -1482,7 +1471,7 @@ void loop(){
       
     }
 
-  }else if(screen == 9){
+  } else if(screen == 9){
 
     if(encoderPos >= 71){
       
@@ -1580,9 +1569,7 @@ void loop(){
       
     }
 
-  }
-
-  else if(screen == 10){
+  } else if(screen == 10){
 
     if(encoderPos > 1){
       
@@ -1907,7 +1894,7 @@ void loop(){
     }
     
   } else if(screen == 13){
-    
+
     if(encoderPos > 1){
       
       encoderPos = 1;
