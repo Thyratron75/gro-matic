@@ -146,7 +146,8 @@ struct setings_t {
 
 } setings_a, setings_b; // wenn sich structure a von b unterscheidet && write_EEPROM == true dann schreibe EEPROM neu...
 
-bool write_EEPROM = false;
+byte write_EEPROM = false; // false = 0;
+bool save_EEPROM  = false;
 
 //Displayfunktionen
 byte hintergrund = 1;    // schalte dispaly an menue
@@ -501,12 +502,12 @@ void tagec(){ // bluete Tagecounter
     if(relay_switching == LOW)
       setings_a.bloom_counter++;
       
-    write_EEPROM = true;
+    write_EEPROM++;
     
   }
   
   last_relay_state = relay_switching;
-  
+
 }
 
 void doEncoderA(){
@@ -568,7 +569,7 @@ void readEEPROM(){
 
 void updateEEPROM(){
 
-  if(write_EEPROM){
+  if(write_EEPROM && save_EEPROM){
 
     if(memcmp(&setings_a, &setings_b, sizeof setings_a) != 0){ // Do noting if noting to do
 
@@ -578,6 +579,7 @@ void updateEEPROM(){
     }
 
     write_EEPROM = false;
+    save_EEPROM = write_EEPROM;
 
   }
 
@@ -767,7 +769,7 @@ void loop(){
     } else { 
       
       setings_a.lichtmodus = BLOOM;
-      write_EEPROM = true;
+      write_EEPROM++;
       
     }
     
@@ -860,7 +862,7 @@ void loop(){
     if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
       
       setings_a.lichtmodus++;  // lichtmodus wird um +1 erhöht
-      write_EEPROM = true;
+      write_EEPROM++;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
     
     }
@@ -1016,7 +1018,7 @@ void loop(){
     if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
       
       setings_a.autowasser++;
-      write_EEPROM = true;
+      write_EEPROM++;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
       
     }
@@ -1174,7 +1176,7 @@ void loop(){
         
         setings_a.lsr_an = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        write_EEPROM = true;
+        write_EEPROM++;
         lcd.clear();
         anaus++;
         
@@ -1218,7 +1220,7 @@ void loop(){
         
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         
-        write_EEPROM = true;
+        write_EEPROM++;
         lcd.clear();
         anaus++;
       
@@ -1251,7 +1253,7 @@ void loop(){
         
         setings_a.grow_licht_an = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        write_EEPROM = true;
+        write_EEPROM++;
         lcd.clear();
         anaus++;
         
@@ -1294,7 +1296,7 @@ void loop(){
         }
         
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        write_EEPROM = true;
+        write_EEPROM++;
         lcd.clear();
         anaus++;
         
@@ -1327,7 +1329,7 @@ void loop(){
         
         setings_a.bloom_licht_an = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        write_EEPROM = true;
+        write_EEPROM++;
         lcd.clear();
         anaus++;
         
@@ -1370,7 +1372,7 @@ void loop(){
         }
         
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        write_EEPROM = true;
+        write_EEPROM++;
         lcd.clear();
         Alarm.delay(100);
         anaus = 0;
@@ -1418,7 +1420,7 @@ void loop(){
         
         setings_a.lsr_temp = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        write_EEPROM = true;
+        write_EEPROM++;
         lcd.clear();
         temp_bereich++;
         
@@ -1449,7 +1451,7 @@ void loop(){
         
         setings_a.grow_temp = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        write_EEPROM = true;
+        write_EEPROM++;
         lcd.clear();
         temp_bereich++;
         
@@ -1480,7 +1482,7 @@ void loop(){
         
         setings_a.bloom_temp = encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        write_EEPROM = true;
+        write_EEPROM++;
         lcd.clear();
         screen = 9;
         
@@ -1518,7 +1520,7 @@ void loop(){
         
         setings_a.lsr_rlf = (double) encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        write_EEPROM = true;
+        write_EEPROM++;
         lcd.clear();
         rlf_bereich++;
         
@@ -1543,7 +1545,7 @@ void loop(){
         
         setings_a.grow_rlf = (double) encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        write_EEPROM = true;
+        write_EEPROM++;
         lcd.clear();
         rlf_bereich++;
         
@@ -1570,7 +1572,7 @@ void loop(){
         
         setings_a.bloom_rlf = (double) encoderPos;
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        write_EEPROM = true;
+        write_EEPROM++;
         lcd.clear();
         rlf_bereich++;
         
@@ -1984,7 +1986,7 @@ void loop(){
       
       setings_a.startwasser = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-      write_EEPROM = true;
+      write_EEPROM++;
       lcd.clear();
       screen = 15;
       
@@ -2017,7 +2019,7 @@ void loop(){
       
       setings_a.startwassermin = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-      write_EEPROM = true;
+      write_EEPROM++;
       lcd.clear();
       screen = 16;
       
@@ -2050,7 +2052,7 @@ void loop(){
       
       setings_a.auswasser = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-      write_EEPROM = true;
+      write_EEPROM++;
       lcd.clear();
       screen = 17;
       
@@ -2083,7 +2085,7 @@ void loop(){
       
       setings_a.sekauswasser = encoderPos;
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-      write_EEPROM = true;
+      write_EEPROM++;
       lcd.clear();
       screen = 18;
       
