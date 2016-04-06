@@ -152,14 +152,8 @@ unsigned long screenZeit = 0;  // Zeit beim drücken des Tasters
 byte letztertag = 0;
 byte letztermonat = 0;
 
-// Variablen zum einstellen der RTC
-byte setsekunde = 0;
-byte setminute = 1;
-byte setstunde = 1;
-byte settag = 6;
-byte settagderwoche = 1;
-byte setmonat = 3;
-byte setjahr = 16;
+// Variable (struct) zum einstellen der RTC
+tmElements_t tm;
 
 // BME 280
 double ltitemp;
@@ -588,6 +582,7 @@ void setup(){
 
   setSyncProvider(RTC.get); // Function to get the time from the RTC
   setSyncInterval(5000);    // Set the number of seconds between re-sync (5 Minuten)
+  RTC.read(tm);
 
   // Splashscreen
   lcd.setCursor(0, 0);
@@ -1658,17 +1653,17 @@ void loop(){
       lcd.print(encoderPos);
       lcd.print(F("."));
       
-      if(setmonat < 10)
+      if(tm.Month < 10)
         lcd.print("0");
  
-      lcd.print(setmonat);
+      lcd.print(tm.Month);
       lcd.print(F("."));
-      lcd.print(2000 + setjahr);
+      lcd.print(tm.Year);
 
       if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
         
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        settag = encoderPos;
+        tm.Day = encoderPos;
         lcd.clear();
         zeitstellen++;
         
@@ -1693,10 +1688,10 @@ void loop(){
       lcd.print(F("Monat einstellen:"));
       lcd.setCursor(0, 1);
       
-      if(settag < 10)
+      if(tm.Day < 10)
         lcd.print("0");
         
-      lcd.print(settag);
+      lcd.print(tm.Day);
       lcd.print(F("."));
       
       if(encoderPos < 10)
@@ -1704,13 +1699,13 @@ void loop(){
 
       lcd.print(encoderPos);
       lcd.print(F("."));
-      lcd.print(2000 + setjahr);
+      lcd.print(tm.Year);
 
 
       if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
         
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        setmonat = encoderPos;
+        tm.Month = encoderPos;
         lcd.clear();
         zeitstellen++;
         
@@ -1737,23 +1732,23 @@ void loop(){
       lcd.print(F("Jahr einstellen:"));
       lcd.setCursor(0, 1);
       
-      if(settag < 10)
+      if(tm.Day < 10)
         lcd.print("0");
 
-      lcd.print(settag);
+      lcd.print(tm.Day);
       lcd.print(F("."));
 
-      if(setmonat < 10)
+      if(tm.Month < 10)
         lcd.print("0");
 
-      lcd.print(setmonat);
+      lcd.print(tm.Month);
       lcd.print(F("."));
       lcd.print(2000 + encoderPos);
 
       if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
         
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        setjahr = encoderPos;
+        tm.Year = encoderPos;
         lcd.clear();
         zeitstellen++;
         
@@ -1784,7 +1779,7 @@ void loop(){
       if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
         
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        settagderwoche = encoderPos;
+        //tm.weekday = encoderPos;
         lcd.clear();
         zeitstellen++;
         
@@ -1814,21 +1809,21 @@ void loop(){
       lcd.print(encoderPos);
       lcd.print(F(":"));
       
-      if(setminute < 10)
+      if(tm.Minute < 10)
         lcd.print("0");
 
-      lcd.print(setminute);
+      lcd.print(tm.Minute);
       lcd.print(F(":"));
 
-      if(setsekunde < 10)
+      if(tm.Second < 10)
         lcd.print("0");
 
-      lcd.print(setsekunde);
+      lcd.print(tm.Second);
 
       if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
         
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        setstunde = encoderPos;
+        tm.Hour = encoderPos;
         lcd.clear();
         zeitstellen++;
         
@@ -1853,10 +1848,10 @@ void loop(){
       lcd.print(F("Minute einstellen:"));
       lcd.setCursor(0, 1);
       
-      if(setstunde < 10)
+      if(tm.Hour < 10)
         lcd.print("0");
 
-      lcd.print(setstunde);
+      lcd.print(tm.Hour);
       lcd.print(F(":"));
       
       if(encoderPos < 10)
@@ -1864,15 +1859,15 @@ void loop(){
 
       lcd.print(encoderPos);
       lcd.print(F(":"));
-      if(setsekunde < 10)
+      if(tm.Second < 10)
         lcd.print("0");
 
-      lcd.print(setsekunde);
+      lcd.print(tm.Second);
 
       if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
         
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        setminute = encoderPos;
+        tm.Minute = encoderPos;
         lcd.clear();
         zeitstellen++;
         
@@ -1885,41 +1880,41 @@ void loop(){
       lcd.setCursor(0, 0);
 
       const char c_dayOfWeek[7][11]={ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"};
-      lcd.print(c_dayOfWeek[settagderwoche]);
-      
+      lcd.print(c_dayOfWeek[weekday(encoderPos)]);
+ 
       lcd.setCursor(0, 1);
       
-      if(setstunde < 10)
+      if(tm.Hour < 10)
         lcd.print("0");
 
-      lcd.print(setstunde);
+      lcd.print(tm.Hour);
       lcd.print(F(":"));
       
-      if(setminute < 10)
+      if(tm.Minute < 10)
         lcd.print("0");
 
-      lcd.print(setminute);
+      lcd.print(tm.Minute);
       
       lcd.print(F(":"));
-      if(setsekunde < 10)
+      if(tm.Second < 10)
         lcd.print("0");
 
-      lcd.print(setsekunde);
+      lcd.print(tm.Second);
       lcd.print(F(" "));
       
-      if(settag < 10)
+      if(tm.Day < 10)
         lcd.print("0");
 
-      lcd.print(settag);
+      lcd.print(tm.Day);
 
       lcd.print(F("."));
       
-      if(setmonat < 10)
+      if(tm.Month < 10)
         lcd.print("0");
         
-      lcd.print(setmonat);
+      lcd.print(tm.Month);
       lcd.print(F("."));
-      lcd.print(2000 + setjahr);
+      lcd.print(tm.Year);
 
       lcd.setCursor(0, 2);
       lcd.print("best");
@@ -1931,12 +1926,12 @@ void loop(){
       if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
         
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
+        
+        // Set RTC time.
+        RTC.write(tm);
 
-        // Set system time.
-        setTime( setstunde, setminute, setsekunde, settag, setmonat, setjahr);
-
-        // Set RTC time from system time.
-        RTC.set(now());
+        // Set system time from RTC
+        setTime(RTC.get());
 
         lcd.clear();
         screen = 1;
