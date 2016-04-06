@@ -58,6 +58,36 @@
               µ = 0xE4
 */
 
+/***************/
+/* DEFINEMENTS */
+/***************/
+// Bekanntmachung der Relais
+#define luft_relay    9   // luft_relay = LTI
+#define licht_relay_p 7   // licht_relay = zur Steuerung des Hauptleuchtmittels
+#define lsr_relay_p   6   // lsr_relay = zur Steuerung der LSR der Jungpflanzen
+#define ventilator    5   // vetilator = zur steuerung des Relais Umluftventilators
+#define irrigation    11  // wasser_relay = autobewaesserung
+
+#define BACKLIGHT_PIN (3)
+
+#define LED_ADDR (0x27)  // might need to be 0x3F, if 0x27 doesn't work
+
+// GY-30 Lux Meter
+#define BH1750_address 0x23  // I2C Addresse des GY-30
+
+//Backlight button
+#define buttonPin 10
+
+//Programm modus und reset Taster
+#define wechslertPin A1  // Pinnummer des Tasters für zum Lichtmodus wechseln und Eprom Reset
+#define entprellZeit 200  // Zeit für Entprellung, anpassen!
+#define screenPin 4  // Pin für Taster zum umschalten der LCD seite
+#define encoderPinA 2
+#define encoderPinB 3
+
+/************/
+/* INCLUDES */
+/************/
 #include "Wire.h"                   // https://www.arduino.cc/en/Reference/Wire (included with Arduino IDE)
 #include "LiquidCrystal_I2C.h"      // https://bitbucket.org/fmalpartida/new-liquidcrystal
 #include "DS3232RTC.h"              // https://github.com/JChristensen/DS3232RTC.git
@@ -68,6 +98,9 @@
 #include "Time.h"                   // https://github.com/PaulStoffregen/Time
 #include "TimeAlarms.h"             // https://www.pjrc.com/teensy/td_libs_TimeAlarms.html
 
+/********************/
+/* GLOBAL VARIABLES */
+/********************/
 /* Festlegen der verschiedenen Lichtprogramme */
 enum { LSR, GROW, BLOOM };
 
@@ -115,25 +148,10 @@ struct setings_t {
 
 bool write_EEPROM = false;
 
-#define BACKLIGHT_PIN (3)
-#define LED_ADDR (0x27)  // might need to be 0x3F, if 0x27 doesn't work
-
-LiquidCrystal_I2C lcd(LED_ADDR, 2, 1, 0, 4, 5, 6, 7, BACKLIGHT_PIN, POSITIVE);
-
-// GY-30 Lux Meter
-#define BH1750_address 0x23  // I2C Addresse des GY-30
-
-//Backlight button
-#define buttonPin 10
-
 //Displayfunktionen
 byte hintergrund = 1;    // schalte dispaly an menue
 
-//Programm modus und reset Taster
-#define wechslertPin A1  // Pinnummer des Tasters für zum Lichtmodus wechseln und Eprom Reset
-
 bool wechslertGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
-#define entprellZeit 200  // Zeit für Entprellung, anpassen!
 unsigned long wechslertZeit = 0;  // Zeit beim drücken des Tasters
 
 // Verschiedene Variablen
@@ -143,7 +161,6 @@ bool relay_lsr_switching    = false;
 
 // Ab hier LCD menue fuehrung und taster
 byte screen = 1;
-#define screenPin 4  // Pin für Taster zum umschalten der LCD seite
 bool screenStatus = LOW;  // aktuelles Signal vom Eingangspin
 bool screenGedrueckt = false;  // abfragen ob Taster gedrückt wurde
 unsigned long screenZeit = 0;  // Zeit beim drücken des Tasters
@@ -155,31 +172,17 @@ byte letztermonat = 0;
 // Variable (struct) zum einstellen der RTC
 tmElements_t tm;
 
-// BME 280
-Adafruit_BME280 bme; // I2C
-
 // Encoder
-#define encoderPinA 2
-#define encoderPinB 3
 volatile unsigned int encoderPos = 0;  // Encoder counter
 volatile bool rotating  = false;
 volatile bool A_set     = false;
 volatile bool B_set     = false;
 unsigned int lastReportedPos = 1;
 
-byte anaus = 0;
+byte anaus        = 0;
 byte temp_bereich = 0;
-byte rlf_bereich = 0;
-byte zeitstellen = 0;
-
-I2CSoilMoistureSensor bodensensor; // setze Var fuer Bodenfeuchtesensor (chirp)
-
-// Bekanntmachung der Relais
-#define luft_relay    9   // luft_relay = LTI
-#define licht_relay_p 7   // licht_relay = zur Steuerung des Hauptleuchtmittels
-#define lsr_relay_p   6   // lsr_relay = zur Steuerung der LSR der Jungpflanzen
-#define ventilator    5   // vetilator = zur steuerung des Relais Umluftventilators
-#define irrigation    11  // wasser_relay = autobewaesserung
+byte rlf_bereich  = 0;
+byte zeitstellen  = 0;
 
 // Custom Caracter
 enum { MOON, SUN, THERMO, RLF, WATER_ON, WATER_OFF, VENTI_I, VENTI_II };
@@ -192,6 +195,16 @@ byte Water_off[8] = { 0b11100, 0b01000, 0b11100, 0b11110, 0b00011, 0b00011, 0b00
 byte Venti_I[8]   = { 0b00100, 0b01010, 0b00000, 0b00100, 0b10001, 0b11011, 0b00000, 0b00000 };
 byte Venti_II[8]  = { 0b00000, 0b11011, 0b10001, 0b00100, 0b00000, 0b01010, 0b00100, 0b00000 };
 
+/***********/
+/* OBJECTS */
+/***********/
+LiquidCrystal_I2C lcd(LED_ADDR, 2, 1, 0, 4, 5, 6, 7, BACKLIGHT_PIN, POSITIVE);
+Adafruit_BME280 bme; // I2C BME-280
+I2CSoilMoistureSensor bodensensor; // setze Var fuer Bodenfeuchtesensor (chirp)
+
+/*************/
+/* FUNCTIONS */
+/*************/
 // GY-30 Luxmeter
 void BH1750_Init(int address){
 
@@ -221,8 +234,6 @@ byte BH1750_Read(int address, byte *buff){
 
 }
 
-//****************************hier gehen die einzelnen Funktionen los
-
 void displayTime(){ // anzeige der Zeit und Datum auf dem Display
   
   if(hintergrund == 1){
@@ -233,7 +244,7 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
       lcd.print("0");
  
     lcd.print(hour(), DEC);
-    
+
     lcd.print(":");
     
     if(minute() < 10)
@@ -250,8 +261,8 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
     lcd.print(" ");
 
     const char c_dayOfWeek[7][3]={"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
-    lcd.print(c_dayOfWeek[weekday()]);
-    
+    lcd.print(c_dayOfWeek[weekday(now())]);
+ 
     lcd.print(" ");
     
     if(day() < 10)
@@ -555,6 +566,23 @@ void readEEPROM(){
   
 }
 
+void updateEEPROM(){
+
+  if(write_EEPROM){
+
+    if(memcmp(&setings_a, &setings_b, sizeof setings_a) != 0){ // Do noting if noting to do
+
+      EEPROM.put(0, setings_a);
+      setings_b = setings_a;
+
+    }
+
+    write_EEPROM = false;
+
+  }
+
+}
+
 void setup(){
 
   Serial.begin(9600);
@@ -820,12 +848,14 @@ void loop(){
     gy30();  // Luxmeter
 
     //GY-30
+    /*
     if(second() >= 0){
       
       void BH1750_Init(int address);
       
     }
-
+    */
+    
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
     if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
       
@@ -1687,7 +1717,7 @@ void loop(){
 
     if(zeitstellen == 2){
       
-      byte encoderPos = 16;
+      encoderPos = 16;
       
       if(encoderPos <= 15){
         
@@ -1715,7 +1745,7 @@ void loop(){
 
       lcd.print(tm.Month);
       lcd.print(F("."));
-      lcd.print(2000 + encoderPos);
+      lcd.print(2000 + encoderPos); // the nex year 3000 bug :)
 
       if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
         
@@ -1821,7 +1851,7 @@ void loop(){
       lcd.setCursor(0, 0);
 
       const char c_dayOfWeek[7][11]={ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"};
-      lcd.print(c_dayOfWeek[weekday(encoderPos)]);
+      lcd.print(c_dayOfWeek[encoderPos]);
  
       lcd.setCursor(0, 1);
       
@@ -2110,19 +2140,3 @@ void loop(){
 
 }
 
-void updateEEPROM(){
-
-  if(write_EEPROM){
-
-    if(memcmp(&setings_a, &setings_b, sizeof setings_a) != 0){ // Do noting if noting to do
-
-      EEPROM.put(0, setings_a);
-      setings_b = setings_a;
-
-    }
-
-    write_EEPROM = false;
-
-  }
-
-}
