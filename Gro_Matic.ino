@@ -477,7 +477,7 @@ void displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
 }
 
 // Custom Caracter
-enum { moon, sun, thermo, rlf, water_on, water_off, venti_I, venti_II };
+enum { MOON, SUN, THERMO, RLF, WATER_ON, WATER_OFF, VENTI_I, VENTI_II };
 byte Moon[8]      = { 0b00000, 0b01110, 0b10101, 0b11111, 0b10001, 0b01110, 0b00000, 0b00000 };
 byte Sun[8]       = { 0b00000, 0b00100, 0b10101, 0b01110, 0b01110, 0b10101, 0b00100, 0b00000 };
 byte Thermo[8]    = { 0b00100, 0b01010, 0b01010, 0b01110, 0b01110, 0b11111, 0b11111, 0b01110 };
@@ -627,14 +627,14 @@ void setup(){
   attachInterrupt(1, doEncoderB, CHANGE); // Encoder pin an interrupt 1 (pin 3)
 
   // erstelle die Custom character
-  lcd.createChar(moon,      Moon);
-  lcd.createChar(sun,       Sun);
-  lcd.createChar(thermo,    Thermo);
-  lcd.createChar(rlf,       Rlf);
-  lcd.createChar(water_on,  Water_on);
-  lcd.createChar(water_off, Water_off);
-  lcd.createChar(venti_I,   Venti_I);
-  lcd.createChar(venti_II,  Venti_II);
+  lcd.createChar(MOON,      Moon);
+  lcd.createChar(SUN,       Sun);
+  lcd.createChar(THERMO,    Thermo);
+  lcd.createChar(RLF,       Rlf);
+  lcd.createChar(WATER_ON,  Water_on);
+  lcd.createChar(WATER_OFF, Water_off);
+  lcd.createChar(VENTI_I,   Venti_I);
+  lcd.createChar(VENTI_II,  Venti_II);
 
 //  Alarm.alarmRepeat(startwasser, startwassermin, 0, startzeitwassern); // 8:30am every day
 //  Alarm.alarmRepeat(startwasser, auswasser, sekauswasser, endzeitwassern); // 5:45pm every day
@@ -873,7 +873,7 @@ void loop(){
         ventiicon = LOW;
         previousMillis = currentMillis;
         lcd.setCursor(17, 2);
-        lcd.write(venti_I);
+        lcd.write(VENTI_I);
         
       }
 
@@ -882,7 +882,7 @@ void loop(){
         ventiicon = HIGH;
         previousMillis = currentMillis;
         lcd.setCursor(17, 2);
-        lcd.write(venti_II);
+        lcd.write(VENTI_II);
         
       }
     }
