@@ -166,7 +166,7 @@ Adafruit_BME280 bme; // I2C
 #define encoderPinB 3
 volatile unsigned int encoderPos = 0;  // Encoder counter
 unsigned int lastReportedPos = 1;
-static boolean rotating = false;
+bool rotating = false;
 boolean A_set = false;
 boolean B_set = false;
 
@@ -295,6 +295,7 @@ void bme280(){ // Anzeige der Temp und RLF auf dem Display
       lcd.print(int(dsplrlf));
       lcd.print(F("%"));
       lcd.print(F("   "));
+      
     }
     
   }
@@ -2154,4 +2155,3 @@ void updateEEPROM(){
   }
 
 }
-
