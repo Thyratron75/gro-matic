@@ -170,9 +170,6 @@ unsigned long screenZeit = 0;  // Zeit beim drücken des Tasters
 byte letztertag = 0;
 byte letztermonat = 0;
 
-// Variable (struct) zum einstellen der RTC
-tmElements_t tm;
-
 // Encoder
 volatile unsigned int encoderPos = 0;  // Encoder counter
 volatile bool rotating  = false;
@@ -596,7 +593,6 @@ void setup(){
 
   setSyncProvider(RTC.get); // Function to get the time from the RTC
   setSyncInterval(5000);    // Set the number of seconds between re-sync (5 Minuten)
-  RTC.read(tm);
 
   // Splashscreen
   lcd.setCursor(0, 0);
@@ -1699,6 +1695,8 @@ void Screen11(){
 void Screen12(){
 
     static uint8_t zeitstellen;
+    // Variable (struct) zum einstellen der RTC
+    static tmElements_t tm;
 
     if(zeitstellen == 0){
       
