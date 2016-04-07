@@ -819,7 +819,14 @@ void loop(){
   if(setings_a.autowasser == 1){
   } // Autobewaesserung Ende
 
-  // ab hier Taster abfrage fuer LCD menue
+  Screens();
+  updateEEPROM();
+
+}
+
+void ScreenPush(){
+
+      // ab hier Taster abfrage fuer LCD menue
   screenStatus = digitalRead(screenPin);
 
   // Wenn der Wechseltaster gedrückt ist...
@@ -838,11 +845,75 @@ void loop(){
     lcd.clear();
     
   }
+  
+}
 
-  //******************************************************************
+void Screens(){
 
-  if(screen == 1){
+  ScreenPush();
+
+  if(screen == 0)
+    return;
+
+  if(screen == 1)
+    Screen1();
+
+  if(screen == 2)
+    Screen2();
+
+  if(screen == 3)
+    Screen3();
+
+  if(screen == 4)
+    Screen4();
+
+  if(screen == 5)
+    Screen5();
     
+  if(screen == 6)
+    Screen6();
+
+  if(screen == 7)
+    Screen7();
+
+  if(screen == 8)
+    Screen8();
+
+  if(screen == 9)
+    Screen9();
+
+  if(screen == 10)
+    Screen10();
+    
+  if(screen == 11)
+    Screen11();
+
+  if(screen == 12)
+    Screen12();
+    
+  if(screen == 13)
+    Screen13();
+    
+  if(screen == 14)
+    Screen14();
+        
+  if(screen == 15)
+    Screen15();
+    
+  if(screen == 16)
+    Screen16();
+        
+  if(screen == 17)
+    Screen17();
+    
+  if(screen == 18)
+    Screen18();
+
+}
+
+void Screen1(){
+
+      
     // Rufe funktionen für Seite 1 auf
     displayTime();        // zeige die RTC Daten auf dem LCD display,
     bme280();          // zeige temp und rlf auf dem LCD display,
@@ -971,8 +1042,10 @@ void loop(){
       
     } // Lichtmodus Ende
 
-  } else if(screen == 2){
+}
 
+void Screen2(){
+    
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Tagecounter gelöscht werden ...
     if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
       
@@ -1011,8 +1084,10 @@ void loop(){
     lcd.print(F("Speicher l"));
     lcd.print((char)0xEF);
     lcd.print(F("schen."));
+  
+}
 
-  } else if(screen == 3){
+void Screen3(){
     
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
     if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
@@ -1064,9 +1139,11 @@ void loop(){
     lcd.print(bodensensor.getTemperature() / (float)10); //lese temperatur register des bodensensors
     lcd.print((char)223);
     lcd.print(F("C "));
+  
+}
 
-  } else if(screen == 4){
-
+void Screen4(){
+  
     lcd.setCursor(0, 0);
     lcd.print(F("Schaltzeiten Licht"));
     lcd.setCursor(0, 1);
@@ -1097,8 +1174,9 @@ void loop(){
       
     }
     
-  } else if(screen == 5){
+}
 
+void Screen5(){
     lcd.setCursor(0, 0);
     lcd.print(F("eingest. LTI Werte"));
     lcd.setCursor(0, 1);
@@ -1133,13 +1211,18 @@ void loop(){
       wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
 
     }
-    
-  } else if(screen == 6){
+  
+}
 
+void Screen6(){
+    
     screen = 10; // geht wieder auf seite 1 zurück
   
-  } else if(screen == 7){
+}
 
+void Screen7(){
+
+    
     if(encoderPos == 24)
       encoderPos = 0;
 
@@ -1382,7 +1465,9 @@ void loop(){
       
     }
 
-  }  else if(screen == 8){
+}
+
+void Screen8(){
 
     if(encoderPos >= 29){
       
@@ -1489,8 +1574,10 @@ void loop(){
       }
       
     }
+  
+}
 
-  } else if(screen == 9){
+void Screen9(){
 
     if(encoderPos >= 71){
       
@@ -1587,9 +1674,10 @@ void loop(){
       screen = 5;
       
     }
+      
+}
 
-  } else if(screen == 10){
-
+void Screen10(){
     if(encoderPos > 1){
       
       encoderPos = 1;
@@ -1627,12 +1715,16 @@ void loop(){
         screen = 12;
 
     }
-    
-  } else if(screen == 11){
-    
-    screen = 1;
-    
-  } else if(screen == 12){
+  
+}
+
+void Screen11(){
+  
+     screen = 1;
+
+}
+
+void Screen12(){
 
     if(zeitstellen == 0){
       
@@ -1911,9 +2003,10 @@ void loop(){
       }
 
     }
-    
-  } else if(screen == 13){
+  
+}
 
+void Screen13(){
     if(encoderPos > 1){
       
       encoderPos = 1;
@@ -1959,9 +2052,11 @@ void loop(){
       }
       
     }
-    
-  } else if(screen == 14){
-    
+  
+}
+
+void Screen14(){
+
     if(encoderPos == 24)
       encoderPos = 0;
 
@@ -1991,8 +2086,11 @@ void loop(){
       screen = 15;
       
     }
-    
-  } else if(screen == 15){
+
+  
+}
+
+void Screen15(){
     
     if(encoderPos == 60){
       
@@ -2024,10 +2122,12 @@ void loop(){
       screen = 16;
       
     }
-    
-  } else if(screen == 16){
-    
-    if(encoderPos == 60){
+  
+}
+
+void Screen16(){
+
+      if(encoderPos == 60){
       
       encoderPos = 0;
       
@@ -2057,9 +2157,11 @@ void loop(){
       screen = 17;
       
     }
-    
-  } else if(screen == 17){
-    
+
+}
+
+void Screen17(){
+
     if(encoderPos == 60){
       
       encoderPos = 0;
@@ -2090,8 +2192,11 @@ void loop(){
       screen = 18;
       
     }
-    
-  } else if(screen == 18){
+  
+}
+
+void Screen18(){
+
 
     lcd.setCursor(0, 0);
     lcd.print(F("Startzeit:"));
@@ -2135,10 +2240,6 @@ void loop(){
       asm volatile ("jmp 0");
       
     }
-    
-  }
-
-  updateEEPROM();
 
 }
 
