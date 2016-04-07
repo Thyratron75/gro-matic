@@ -922,7 +922,7 @@ void Screen1(){
     static bool           ventiicon;
     static unsigned long  previousMillis;
     unsigned long         currentMillis = millis();
-    const unsigned long   OnTime = 300;
+    const unsigned long   OnTime = 500;
     
     if(digitalRead(ventilator) == LOW){
       
@@ -1162,23 +1162,23 @@ void Screen5(){
     lcd.print(F("LSR:  "));
     lcd.print(setings_a.lsr_temp);
     lcd.print((char)223);
-    lcd.print(F("C, :"));
+    lcd.print(F("C:"));
     lcd.print(setings_a.lsr_rlf);
-    lcd.print(F(" %"));
+    lcd.print(F("%"));
     lcd.setCursor(0, 2);
     lcd.print(F("Grow: "));
     lcd.print(setings_a.grow_temp);
     lcd.print((char)223);
-    lcd.print(F("C, :"));
+    lcd.print(F("C:"));
     lcd.print(setings_a.grow_rlf);
-    lcd.print(F(" %"));
+    lcd.print(F("%"));
     lcd.setCursor(0, 3);
     lcd.print(F("Bloom:"));
     lcd.print(setings_a.bloom_temp);
     lcd.print((char)223);
-    lcd.print(F("C, :"));
+    lcd.print(F("C:"));
     lcd.print(setings_a.bloom_rlf);
-    lcd.print(F(" %"));
+    lcd.print(F("%"));
     
     if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
       
