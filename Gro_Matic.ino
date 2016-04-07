@@ -1672,18 +1672,10 @@ void Screen10(){
     lcd.setCursor(0, 0);
     lcd.print(F("RTC einstellen?"));
     lcd.setCursor(0, 1);
-    
-    switch(encoderPos){
-      
-      case 0:
-        lcd.print("nein");
-        break;
-      case 1:
-        lcd.print("ja  ");
-        break;
-        
-    }
-    
+
+    const char jein[2][5] = {"nein", "ja"};
+    lcd.print(jein[encoderPos]);
+
     if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
       
       wechslertGedrueckt = 0;
