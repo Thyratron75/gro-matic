@@ -1752,7 +1752,7 @@ void loop(){
       if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
         
         wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        tm.Year = encoderPos;
+        tm.Year = 2000 + encoderPos;
         lcd.clear();
         zeitstellen++;
         
