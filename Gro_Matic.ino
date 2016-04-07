@@ -161,10 +161,6 @@ bool screenStatus = LOW;  // aktuelles Signal vom Eingangspin
 bool screenGedrueckt = false;  // abfragen ob Taster gedrückt wurde
 unsigned long screenZeit = 0;  // Zeit beim drücken des Tasters
 
-// Variablen für Starttag und bloomcounter
-byte letztertag = 0;
-byte letztermonat = 0;
-
 // Encoder
 volatile unsigned int encoderPos = 0;  // Encoder counter
 volatile bool rotating  = false;
@@ -1017,6 +1013,9 @@ void Screen1(){
 }
 
 void Screen2(){
+
+    static uint8_t letztertag;
+    static uint8_t letztermonat;
     
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Tagecounter gelöscht werden ...
     if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
