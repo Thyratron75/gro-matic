@@ -153,7 +153,7 @@ bool save_EEPROM  = false;
 byte hintergrund = 1;    // schalte dispaly an menue
 
 bool wechslerGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
-unsigned long wechslertZeit = 0;  // Zeit beim drücken des Tasters
+unsigned long wechslerZeit = 0;  // Zeit beim drücken des Tasters
 
 // Ab hier LCD menue fuehrung und taster
 byte screen = 1;
@@ -652,7 +652,7 @@ void loop(){
   // Wenn der Wechseltaster gedrückt ist...
   if(wechslertStatus == HIGH){
     
-    wechslertZeit = millis();  // aktualisiere tasterZeit
+    wechslerZeit = millis();  // aktualisiere tasterZeit
     wechslerGedrueckt = 1;  // speichert, dass Taster gedrückt wurde
     
   }
@@ -898,7 +898,7 @@ void Screen1(){
     */
     
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-    if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+    if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
       
       setings_a.lichtmodus++;  // lichtmodus wird um +1 erhöht
       write_EEPROM++;
@@ -1018,7 +1018,7 @@ void Screen2(){
     static uint8_t letztermonat;
     
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Tagecounter gelöscht werden ...
-    if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+    if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
       
       wechslerGedrueckt = 0;      // setzt gedrückten Taster zurück
       
@@ -1061,7 +1061,7 @@ void Screen2(){
 void Screen3(){
     
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-    if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+    if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
       
       setings_a.autowasser++;
       write_EEPROM++;
@@ -1136,7 +1136,7 @@ void Screen4(){
     lcd.print(setings_a.bloom_licht_aus);
     lcd.print(F(":00 Uhr"));
     
-    if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+    if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
       
       lcd.clear();
       Alarm.delay(50);
@@ -1172,7 +1172,7 @@ void Screen5(){
     lcd.print(setings_a.bloom_rlf);
     lcd.print(F("%"));
     
-    if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+    if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
       
       lcd.clear();
       Alarm.delay(200);
@@ -1227,7 +1227,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         setings_a.lsr_an = encoderPos;
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
@@ -1260,7 +1260,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
  
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         if(encoderPos == 0){
           
@@ -1304,7 +1304,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         setings_a.grow_licht_an = encoderPos;
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
@@ -1337,7 +1337,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         if(encoderPos == 0){
           
@@ -1380,7 +1380,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 12 Stunden"));
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         setings_a.bloom_licht_an = encoderPos;
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
@@ -1413,7 +1413,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 12 Stunden"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         if(encoderPos == 0){
           
@@ -1473,7 +1473,7 @@ void Screen8(){
       lcd.print((char)223);
       lcd.print(F("C"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         setings_a.lsr_temp = encoderPos;
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
@@ -1504,7 +1504,7 @@ void Screen8(){
       lcd.print((char)223);
       lcd.print(F("C"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         setings_a.grow_temp = encoderPos;
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
@@ -1535,7 +1535,7 @@ void Screen8(){
       lcd.print((char)223);
       lcd.print(F("C"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         setings_a.bloom_temp = encoderPos;
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
@@ -1575,7 +1575,7 @@ void Screen9(){
       lcd.setCursor(0, 2);
       lcd.print(F("zwischen 55 % - 60 %"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         setings_a.lsr_rlf = (double) encoderPos;
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
@@ -1600,7 +1600,7 @@ void Screen9(){
       lcd.setCursor(0, 2);
       lcd.print(F("zwischen 50 % - 55 %"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         setings_a.grow_rlf = (double) encoderPos;
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
@@ -1627,7 +1627,7 @@ void Screen9(){
       lcd.setCursor(0, 2);
       lcd.print(F("40 % RLF"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         setings_a.bloom_rlf = (double) encoderPos;
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
@@ -1669,7 +1669,7 @@ void Screen10(){
     const char jein[2][5] = {"nein", "ja"};
     lcd.print(jein[encoderPos]);
 
-    if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+    if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
       
       wechslerGedrueckt = 0;
       
@@ -1725,7 +1725,7 @@ void Screen12(){
       lcd.print(F("."));
       lcd.print(tm.Year);
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
         tm.Day = encoderPos;
@@ -1767,7 +1767,7 @@ void Screen12(){
       lcd.print(tm.Year);
 
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
         tm.Month = encoderPos;
@@ -1810,7 +1810,7 @@ void Screen12(){
       lcd.print(F("."));
       lcd.print(2000 + encoderPos); // the nex year 3000 bug :)
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
         tm.Year = 2000 + encoderPos;
@@ -1854,7 +1854,7 @@ void Screen12(){
 
       lcd.print(tm.Second);
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
         tm.Hour = encoderPos;
@@ -1898,7 +1898,7 @@ void Screen12(){
 
       lcd.print(tm.Second);
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
         tm.Minute = encoderPos;
@@ -1957,7 +1957,7 @@ void Screen12(){
       lcd.setCursor(0, 3);
       lcd.print("Zeit zu setzen.");
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+      if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
         
         wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
         
@@ -2007,7 +2007,7 @@ void Screen13(){
         
     }
     
-    if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+    if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
       
       wechslerGedrueckt = 0;
       
@@ -2047,7 +2047,7 @@ void Screen14(){
     lcd.print(encoderPos);
     lcd.print(F(" Uhr"));
     
-    if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+    if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
       
       setings_a.startwasser = encoderPos;
       wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
@@ -2083,7 +2083,7 @@ void Screen15(){
     lcd.print(encoderPos);
     lcd.print(F(" Min."));
     
-    if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+    if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
       
       setings_a.startwassermin = encoderPos;
       wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
@@ -2118,7 +2118,7 @@ void Screen16(){
     lcd.print(encoderPos);
     lcd.print(F(" Min."));
 
-    if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+    if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
       
       setings_a.auswasser = encoderPos;
       wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
@@ -2153,7 +2153,7 @@ void Screen17(){
     lcd.print(encoderPos);
     lcd.print(F(" Sek."));
  
-    if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+    if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
       
       setings_a.sekauswasser = encoderPos;
       wechslerGedrueckt = 0;  // setzt gedrückten Taster zurück
@@ -2203,7 +2203,7 @@ void Screen18(){
 
     lcd.print(setings_a.sekauswasser);
 
-    if((millis() - wechslertZeit > entprellZeit) && wechslerGedrueckt == 1){
+    if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
       
       wechslerGedrueckt = 0;
       asm volatile ("jmp 0");
