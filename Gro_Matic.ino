@@ -272,7 +272,7 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
     lcd.print(day(), DEC);
     lcd.print(" ");
  
-    const char c_Month[12][4]={"Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Mov", "Dec"};
+    const char c_Month[12][4]={"Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"};
     lcd.print(c_Month[month() -1]);
 
   }
