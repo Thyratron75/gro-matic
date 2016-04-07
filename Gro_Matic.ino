@@ -180,7 +180,6 @@ volatile bool A_set     = false;
 volatile bool B_set     = false;
 unsigned int lastReportedPos = 1;
 
-byte anaus        = 0;
 byte temp_bereich = 0;
 byte rlf_bereich  = 0;
 byte zeitstellen  = 0;
@@ -826,7 +825,7 @@ void loop(){
 
 void ScreenPush(){
 
-      // ab hier Taster abfrage fuer LCD menue
+  // ab hier Taster abfrage fuer LCD menue
   screenStatus = digitalRead(screenPin);
 
   // Wenn der Wechseltaster gedrückt ist...
@@ -839,7 +838,7 @@ void ScreenPush(){
 
   // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
   if((millis() - screenZeit > entprellZeit) && screenGedrueckt == 1){
-    
+
     screen++;  // LCD Seite wird um +1 erhöht
     screenGedrueckt = 0;  // setzt gedrückten Taster zurück
     lcd.clear();
@@ -852,61 +851,41 @@ void Screens(){
 
   ScreenPush();
 
-  if(screen == 0)
-    return;
-
   if(screen == 1)
     Screen1();
-
-  if(screen == 2)
+  else if(screen == 2)
     Screen2();
-
-  if(screen == 3)
+  else if(screen == 3)
     Screen3();
-
-  if(screen == 4)
+  else if(screen == 4)
     Screen4();
-
-  if(screen == 5)
+  else if(screen == 5)
     Screen5();
-    
-  if(screen == 6)
+  else if(screen == 6)
     Screen6();
-
-  if(screen == 7)
+  else if(screen == 7)
     Screen7();
-
-  if(screen == 8)
+  else if(screen == 8)
     Screen8();
-
-  if(screen == 9)
+  else if(screen == 9)
     Screen9();
-
-  if(screen == 10)
+  else if(screen == 10)
     Screen10();
-    
-  if(screen == 11)
+  else if(screen == 11)
     Screen11();
-
-  if(screen == 12)
+  else if(screen == 12)
     Screen12();
-    
-  if(screen == 13)
+  else if(screen == 13)
     Screen13();
-    
-  if(screen == 14)
+  else if(screen == 14)
     Screen14();
-        
-  if(screen == 15)
+  else if(screen == 15)
     Screen15();
-    
-  if(screen == 16)
+  else if(screen == 16)
     Screen16();
-        
-  if(screen == 17)
+  else if(screen == 17)
     Screen17();
-    
-  if(screen == 18)
+  else if(screen == 18)
     Screen18();
 
 }
@@ -1222,6 +1201,7 @@ void Screen6(){
 
 void Screen7(){
 
+    static uint8_t anaus;
     
     if(encoderPos == 24)
       encoderPos = 0;
