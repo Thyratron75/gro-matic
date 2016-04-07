@@ -155,11 +155,6 @@ byte hintergrund = 1;    // schalte dispaly an menue
 bool wechslertGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
 unsigned long wechslertZeit = 0;  // Zeit beim drücken des Tasters
 
-// Verschiedene Variablen
-bool relay_bloom_switching  = false;
-bool relay_grow_switching   = false;
-bool relay_lsr_switching    = false;
-
 // Ab hier LCD menue fuehrung und taster
 byte screen = 1;
 bool screenStatus = LOW;  // aktuelles Signal vom Eingangspin
@@ -887,7 +882,10 @@ void Screens(){
 
 void Screen1(){
 
-      
+    static bool relay_bloom_switching;
+    static bool relay_lsr_switching;
+    static bool relay_grow_switching;
+    
     // Rufe funktionen für Seite 1 auf
     displayTime();        // zeige die RTC Daten auf dem LCD display,
     bme280();          // zeige temp und rlf auf dem LCD display,
