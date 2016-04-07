@@ -182,7 +182,6 @@ unsigned int lastReportedPos = 1;
 
 byte temp_bereich = 0;
 byte rlf_bereich  = 0;
-byte zeitstellen  = 0;
 
 // Custom Caracter
 enum { MOON, SUN, THERMO, RLF, WATER_ON, WATER_OFF, VENTI_I, VENTI_II };
@@ -1658,6 +1657,7 @@ void Screen9(){
 }
 
 void Screen10(){
+  
     if(encoderPos > 1){
       
       encoderPos = 1;
@@ -1697,6 +1697,8 @@ void Screen11(){
 }
 
 void Screen12(){
+
+    static uint8_t zeitstellen;
 
     if(zeitstellen == 0){
       
