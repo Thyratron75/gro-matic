@@ -97,6 +97,8 @@
 #include "Adafruit_BME280.h"        // https://github.com/adafruit/Adafruit_BME280_Library
 #include "Time.h"                   // https://github.com/PaulStoffregen/Time
 #include "TimeAlarms.h"             // https://www.pjrc.com/teensy/td_libs_TimeAlarms.html
+//#include "SdFat.h"                // https://github.com/greiman/SdFat
+//#include <stdarg.h>               // http://playground.arduino.cc/Main/Printf
 
 /********************/
 /* GLOBAL VARIABLES */
@@ -188,6 +190,7 @@ byte Venti_II[8]  = { 0b00000, 0b11011, 0b10001, 0b00100, 0b00000, 0b01010, 0b00
 LiquidCrystal_I2C lcd(LED_ADDR, 2, 1, 0, 4, 5, 6, 7, BACKLIGHT_PIN, POSITIVE);
 Adafruit_BME280 bme; // I2C BME-280
 I2CSoilMoistureSensor bodensensor; // setze Var fuer Bodenfeuchtesensor (chirp)
+//ArduinoOutStream cout(lcd);
 
 /*************/
 /* FUNCTIONS */
@@ -220,6 +223,44 @@ byte BH1750_Read(int address, byte *buff){
   return i;
 
 }
+
+/*
+#define PRINTF_BUFFER 20 
+void p(char *fmt, ...){
+  
+  char buf[PRINTF_BUFFER]; // resulting string limited to 128 chars
+  
+  va_list args;
+  va_start (args, fmt );
+  
+  vsnprintf(buf, PRINTF_BUFFER, fmt, args);
+  
+  va_end (args);
+
+  lcd.print(buf);
+  Serial.print(buf);
+
+}
+
+void p(const __FlashStringHelper *fmt, ...){
+  
+  char buf[PRINTF_BUFFER]; // resulting string limited to 128 chars
+  va_list args;
+  va_start (args, fmt);
+  
+#ifdef __AVR__
+  vsnprintf_P(buf, sizeof(PRINTF_BUFFER), (const char *)fmt, args); // progmem for AVR
+#else
+  vsnprintf(buf, sizeof(PRINTF_BUFFER), (const char *)fmt, args); // for the rest of the world
+#endif
+
+  va_end(args);
+  
+  lcd.print(buf);
+  Serial.print(buf);
+  
+}
+*/
 
 void displayTime(){ // anzeige der Zeit und Datum auf dem Display
   
