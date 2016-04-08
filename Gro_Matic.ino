@@ -928,15 +928,6 @@ void Screen1(){
     bme280();          // zeige temp und rlf auf dem LCD display,
     DS3231temp();  // prüfe gehaeuse temp und gib sie auf dem display aus
     gy30();  // Luxmeter
-
-    //GY-30
-    /*
-    if(second() >= 0){
-      
-      void BH1750_Init(int address);
-      
-    }
-    */
     
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
     if((millis() - wechslerZeit > entprellZeit) && wechslerGedrueckt == 1){
@@ -947,16 +938,16 @@ void Screen1(){
     
     }
 
-    //*********Ventilator Icon
-
+    // Ventilator Icon
     static bool           ventiicon;
     static unsigned long  previousMillis;
     unsigned long         currentMillis = millis();
-    const unsigned long   OnTime = 500;
+    const unsigned long   OnTime1 = 300;
+    const unsigned long   OnTime2 = OnTime1;
     
     if(digitalRead(ventilator) == LOW){
       
-      if((ventiicon == HIGH) && (currentMillis - previousMillis >= OnTime)){
+      if((ventiicon == HIGH) && (currentMillis - previousMillis >= OnTime1)){
         
         ventiicon = LOW;
         previousMillis = currentMillis;
@@ -965,7 +956,7 @@ void Screen1(){
         
       }
 
-      if((ventiicon == LOW) && (currentMillis - previousMillis >= OnTime)){
+      if((ventiicon == LOW) && (currentMillis - previousMillis >= OnTime2)){
         
         ventiicon = HIGH;
         previousMillis = currentMillis;
