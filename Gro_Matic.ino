@@ -76,7 +76,7 @@
 #define BH1750_address 0x23  // I2C Addresse des GY-30
 
 //Backlight button
-#define buttonPin 10
+#define BUTTON_PIN 10
 
 //Programm modus und reset Taster
 #define wechslertPin A1  // Pinnummer des Tasters für zum Lichtmodus wechseln und Eprom Reset
@@ -97,6 +97,9 @@
 #include "Adafruit_BME280.h"        // https://github.com/adafruit/Adafruit_BME280_Library
 #include "Time.h"                   // https://github.com/PaulStoffregen/Time
 #include "TimeAlarms.h"             // https://www.pjrc.com/teensy/td_libs_TimeAlarms.html
+//#include "SdFat.h"                // https://github.com/greiman/SdFat
+//#include <stdarg.h>               // http://playground.arduino.cc/Main/Printf
+#include "Bounce2.h"                // https://github.com/thomasfredericks/Bounce2
 
 /********************/
 /* GLOBAL VARIABLES */
@@ -152,26 +155,8 @@ bool save_EEPROM  = false;
 //Displayfunktionen
 byte hintergrund = 1;    // schalte dispaly an menue
 
-bool wechslertGedrueckt = 0;  // abfragen ob Taster gedrückt wurde
-unsigned long wechslertZeit = 0;  // Zeit beim drücken des Tasters
-
-// Verschiedene Variablen
-bool relay_bloom_switching  = false;
-bool relay_grow_switching   = false;
-bool relay_lsr_switching    = false;
-
 // Ab hier LCD menue fuehrung und taster
 byte screen = 1;
-bool screenStatus = LOW;  // aktuelles Signal vom Eingangspin
-bool screenGedrueckt = false;  // abfragen ob Taster gedrückt wurde
-unsigned long screenZeit = 0;  // Zeit beim drücken des Tasters
-
-// Variablen für Starttag und bloomcounter
-byte letztertag = 0;
-byte letztermonat = 0;
-
-// Variable (struct) zum einstellen der RTC
-tmElements_t tm;
 
 // Encoder
 volatile unsigned int encoderPos = 0;  // Encoder counter
@@ -182,7 +167,6 @@ unsigned int lastReportedPos = 1;
 
 byte temp_bereich = 0;
 byte rlf_bereich  = 0;
-byte zeitstellen  = 0;
 
 // Custom Caracter
 enum { MOON, SUN, THERMO, RLF, WATER_ON, WATER_OFF, VENTI_I, VENTI_II };
@@ -201,6 +185,12 @@ byte Venti_II[8]  = { 0b00000, 0b11011, 0b10001, 0b00100, 0b00000, 0b01010, 0b00
 LiquidCrystal_I2C lcd(LED_ADDR, 2, 1, 0, 4, 5, 6, 7, BACKLIGHT_PIN, POSITIVE);
 Adafruit_BME280 bme; // I2C BME-280
 I2CSoilMoistureSensor bodensensor; // setze Var fuer Bodenfeuchtesensor (chirp)
+
+//ArduinoOutStream cout(lcd);
+
+Bounce debounce   = Bounce();
+Bounce debounce2  = Bounce();
+Bounce debounce3  = Bounce();
 
 /*************/
 /* FUNCTIONS */
@@ -233,6 +223,44 @@ byte BH1750_Read(int address, byte *buff){
   return i;
 
 }
+
+/*
+#define PRINTF_BUFFER 20 
+void p(char *fmt, ...){
+  
+  char buf[PRINTF_BUFFER]; // resulting string limited to 128 chars
+  
+  va_list args;
+  va_start (args, fmt );
+  
+  vsnprintf(buf, PRINTF_BUFFER, fmt, args);
+  
+  va_end (args);
+
+  lcd.print(buf);
+  Serial.print(buf);
+
+}
+
+void p(const __FlashStringHelper *fmt, ...){
+  
+  char buf[PRINTF_BUFFER]; // resulting string limited to 128 chars
+  va_list args;
+  va_start (args, fmt);
+  
+#ifdef __AVR__
+  vsnprintf_P(buf, sizeof(PRINTF_BUFFER), (const char *)fmt, args); // progmem for AVR
+#else
+  vsnprintf(buf, sizeof(PRINTF_BUFFER), (const char *)fmt, args); // for the rest of the world
+#endif
+
+  va_end(args);
+  
+  lcd.print(buf);
+  Serial.print(buf);
+  
+}
+*/
 
 void displayTime(){ // anzeige der Zeit und Datum auf dem Display
   
@@ -329,7 +357,7 @@ void LTI(){ // die Funtion des Rohrventilators
   static double ltitemp;
   static double ltirlf;
 
-  if(millis() - m > 10000){
+  if(millis() - m > 1000){
     
     m = millis();
     ltitemp = bme.readTemperature();
@@ -451,30 +479,15 @@ void gy30(){ // Luxmeter
 
 void displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
 
-  // Lese status des display buttons und schalte wenn betätigt fuer 30 sek. an
-  bool                 buttonState = digitalRead(buttonPin);
-  
-  static bool          buttonGedrueckt;
-  static unsigned long buttonZeit;
-
-  // Wenn der Wechseltaster gedrückt ist...
-  if(buttonState == HIGH){
-
-    buttonZeit = millis();  // aktualisiere tasterZeit
-    buttonGedrueckt = true; // speichert, dass Taster gedrückt wurde
-    
-  }
+  // Update the Bounce instance
+  debounce.update();
 
   // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-  if((millis() - buttonZeit > entprellZeit) && buttonGedrueckt == true){
-    
-    hintergrund++;  // LCD Seite wird um +1 erhöht
-    buttonGedrueckt = false;  // setzt gedrückten Taster zurück
-    
-  }
+  if(debounce.read())
+    hintergrund++; // LCD Seite wird um +1 erhöht
 
   if(hintergrund == 1){ // display ist an
-    
+
     lcd.display();
     lcd.setBacklight(255);
 
@@ -596,8 +609,7 @@ void setup(){
   bme.begin();
 
   setSyncProvider(RTC.get); // Function to get the time from the RTC
-  setSyncInterval(5000);    // Set the number of seconds between re-sync (5 Minuten)
-  RTC.read(tm);
+  setSyncInterval(1000*60*5);    // Set the number of seconds between re-sync (5 Minuten)
 
   // Splashscreen
   lcd.setCursor(0, 0);
@@ -623,7 +635,7 @@ void setup(){
   pinMode(lsr_relay_p,  OUTPUT);
   pinMode(ventilator, OUTPUT);
   pinMode(irrigation, OUTPUT);
-  pinMode(buttonPin, INPUT_PULLUP);  // den backlight Taster als Input setzen
+  pinMode(BUTTON_PIN, INPUT_PULLUP);  // den backlight Taster als Input setzen
   pinMode(wechslertPin, INPUT_PULLUP);  // Modus-Taster Pin wird als Eingang gesetzt
   pinMode(screenPin, INPUT_PULLUP);  // Modus-Taster Pin wird als Eingang gesetzt
   
@@ -632,7 +644,17 @@ void setup(){
   
   digitalWrite(encoderPinA, HIGH);
   digitalWrite(encoderPinB, HIGH);
+
+  // After setting up the button, setup the Bounce instance
+  debounce.attach(BUTTON_PIN);
+  debounce.interval(entprellZeit); // interval in ms
   
+  debounce2.attach(wechslertPin);
+  debounce2.interval(entprellZeit);
+
+  debounce3.attach(screenPin);
+  debounce3.interval(entprellZeit);
+
   attachInterrupt(0, doEncoderA, CHANGE); // Encoder pin an interrupt 0 (pin 2)
   attachInterrupt(1, doEncoderB, CHANGE); // Encoder pin an interrupt 1 (pin 3)
 
@@ -661,15 +683,7 @@ void loop(){
     lastReportedPos = encoderPos;
 
   // ab hier Taster des Encoders
-  bool wechslertStatus = digitalRead(wechslertPin); // aktuelles Signal vom Eingangspin des Wechslertasters
-
-  // Wenn der Wechseltaster gedrückt ist...
-  if(wechslertStatus == HIGH){
-    
-    wechslertZeit = millis();  // aktualisiere tasterZeit
-    wechslertGedrueckt = 1;  // speichert, dass Taster gedrückt wurde
-    
-  }
+  debounce2.update();
 
   //***********************************************
 
@@ -823,33 +837,16 @@ void loop(){
 
 }
 
-void ScreenPush(){
+void Screens(){
 
-  // ab hier Taster abfrage fuer LCD menue
-  screenStatus = digitalRead(screenPin);
-
-  // Wenn der Wechseltaster gedrückt ist...
-  if(screenStatus == HIGH){
+  debounce3.update();
+  
+  if(debounce2.read()){
     
-    screenZeit = millis();  // aktualisiere tasterZeit
-    screenGedrueckt = 1;  // speichert, dass Taster gedrückt wurde
-    
-  }
-
-  // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-  if((millis() - screenZeit > entprellZeit) && screenGedrueckt == 1){
-
-    screen++;  // LCD Seite wird um +1 erhöht
-    screenGedrueckt = 0;  // setzt gedrückten Taster zurück
+    screen++;
     lcd.clear();
     
   }
-  
-}
-
-void Screens(){
-
-  ScreenPush();
 
   if(screen == 1)
     Screen1();
@@ -892,41 +889,34 @@ void Screens(){
 
 void Screen1(){
 
-      
+    static bool relay_bloom_switching;
+    static bool relay_lsr_switching;
+    static bool relay_grow_switching;
+    
     // Rufe funktionen für Seite 1 auf
     displayTime();        // zeige die RTC Daten auf dem LCD display,
     bme280();          // zeige temp und rlf auf dem LCD display,
     DS3231temp();  // prüfe gehaeuse temp und gib sie auf dem display aus
     gy30();  // Luxmeter
-
-    //GY-30
-    /*
-    if(second() >= 0){
-      
-      void BH1750_Init(int address);
-      
-    }
-    */
     
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+    if(debounce2.read()){
       
       setings_a.lichtmodus++;  // lichtmodus wird um +1 erhöht
       write_EEPROM++;
-      wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
     
     }
 
-    //*********Ventilator Icon
-
+    // Ventilator Icon
     static bool           ventiicon;
     static unsigned long  previousMillis;
     unsigned long         currentMillis = millis();
-    const unsigned long   OnTime = 500;
+    const unsigned long   OnTime1 = 300;
+    const unsigned long   OnTime2 = OnTime1;
     
     if(digitalRead(ventilator) == LOW){
       
-      if((ventiicon == HIGH) && (currentMillis - previousMillis >= OnTime)){
+      if((ventiicon == HIGH) && (currentMillis - previousMillis >= OnTime1)){
         
         ventiicon = LOW;
         previousMillis = currentMillis;
@@ -935,7 +925,7 @@ void Screen1(){
         
       }
 
-      if((ventiicon == LOW) && (currentMillis - previousMillis >= OnTime)){
+      if((ventiicon == LOW) && (currentMillis - previousMillis >= OnTime2)){
         
         ventiicon = HIGH;
         previousMillis = currentMillis;
@@ -1024,11 +1014,12 @@ void Screen1(){
 }
 
 void Screen2(){
+
+    static uint8_t letztertag;
+    static uint8_t letztermonat;
     
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Tagecounter gelöscht werden ...
-    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
-      
-      wechslertGedrueckt = 0;      // setzt gedrückten Taster zurück
+    if(debounce2.read()){
       
       for(int i = 0; i < 512; i++)
         EEPROM.write(i, 0);
@@ -1069,11 +1060,10 @@ void Screen2(){
 void Screen3(){
     
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+    if(debounce2.read()){
       
       setings_a.autowasser++;
       write_EEPROM++;
-      wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
       
     }
 
@@ -1144,12 +1134,11 @@ void Screen4(){
     lcd.print(setings_a.bloom_licht_aus);
     lcd.print(F(":00 Uhr"));
     
-    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+    if(debounce2.read()){
       
       lcd.clear();
       Alarm.delay(50);
       screen = 7;
-      wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
       
     }
     
@@ -1180,14 +1169,13 @@ void Screen5(){
     lcd.print(setings_a.bloom_rlf);
     lcd.print(F("%"));
     
-    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+    if(debounce2.read()){
       
       lcd.clear();
       Alarm.delay(200);
       temp_bereich = 0;
       rlf_bereich = 0;
       screen = 8;
-      wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
 
     }
   
@@ -1235,10 +1223,9 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      if(debounce2.read()){
         
         setings_a.lsr_an = encoderPos;
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM++;
         lcd.clear();
         anaus++;
@@ -1268,7 +1255,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
  
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      if(debounce2.read()){
         
         if(encoderPos == 0){
           
@@ -1280,9 +1267,7 @@ void Screen7(){
           setings_a.lsr_aus = encoderPos;
         
         }
-        
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
-        
+
         write_EEPROM++;
         lcd.clear();
         anaus++;
@@ -1312,10 +1297,9 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      if(debounce2.read()){
         
         setings_a.grow_licht_an = encoderPos;
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM++;
         lcd.clear();
         anaus++;
@@ -1345,7 +1329,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      if(debounce2.read()){
         
         if(encoderPos == 0){
           
@@ -1358,7 +1342,6 @@ void Screen7(){
           
         }
         
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM++;
         lcd.clear();
         anaus++;
@@ -1388,10 +1371,9 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 12 Stunden"));
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      if(debounce2.read()){
         
         setings_a.bloom_licht_an = encoderPos;
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM++;
         lcd.clear();
         anaus++;
@@ -1421,7 +1403,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 12 Stunden"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      if(debounce2.read()){
         
         if(encoderPos == 0){
           
@@ -1434,7 +1416,6 @@ void Screen7(){
           
         }
         
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM++;
         lcd.clear();
         Alarm.delay(100);
@@ -1481,16 +1462,15 @@ void Screen8(){
       lcd.print((char)223);
       lcd.print(F("C"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      if(debounce2.read()){
         
         setings_a.lsr_temp = encoderPos;
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM++;
         lcd.clear();
         temp_bereich++;
         
       }
-      
+
     }
 
     if(temp_bereich == 1){
@@ -1512,10 +1492,9 @@ void Screen8(){
       lcd.print((char)223);
       lcd.print(F("C"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      if(debounce2.read()){
         
         setings_a.grow_temp = encoderPos;
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM++;
         lcd.clear();
         temp_bereich++;
@@ -1543,10 +1522,9 @@ void Screen8(){
       lcd.print((char)223);
       lcd.print(F("C"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
-        
+      if(debounce2.read()){
+
         setings_a.bloom_temp = encoderPos;
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM++;
         lcd.clear();
         screen = 9;
@@ -1583,10 +1561,9 @@ void Screen9(){
       lcd.setCursor(0, 2);
       lcd.print(F("zwischen 55 % - 60 %"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      if(debounce2.read()){
         
         setings_a.lsr_rlf = (double) encoderPos;
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM++;
         lcd.clear();
         rlf_bereich++;
@@ -1608,10 +1585,9 @@ void Screen9(){
       lcd.setCursor(0, 2);
       lcd.print(F("zwischen 50 % - 55 %"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      if(debounce2.read()){
         
         setings_a.grow_rlf = (double) encoderPos;
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM++;
         lcd.clear();
         rlf_bereich++;
@@ -1635,10 +1611,9 @@ void Screen9(){
       lcd.setCursor(0, 2);
       lcd.print(F("40 % RLF"));
       
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      if(debounce2.read()){
         
         setings_a.bloom_rlf = (double) encoderPos;
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         write_EEPROM++;
         lcd.clear();
         rlf_bereich++;
@@ -1658,6 +1633,7 @@ void Screen9(){
 }
 
 void Screen10(){
+  
     if(encoderPos > 1){
       
       encoderPos = 1;
@@ -1676,9 +1652,7 @@ void Screen10(){
     const char jein[2][5] = {"nein", "ja"};
     lcd.print(jein[encoderPos]);
 
-    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
-      
-      wechslertGedrueckt = 0;
+    if(debounce2.read()){
       
       if(encoderPos == 0)
         screen = 13;
@@ -1697,6 +1671,10 @@ void Screen11(){
 }
 
 void Screen12(){
+
+    static uint8_t zeitstellen;
+    // Variable (struct) zum einstellen der RTC
+    static tmElements_t tm;
 
     if(zeitstellen == 0){
       
@@ -1728,9 +1706,8 @@ void Screen12(){
       lcd.print(F("."));
       lcd.print(tm.Year);
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      if(debounce2.read()){
         
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         tm.Day = encoderPos;
         lcd.clear();
         zeitstellen++;
@@ -1770,9 +1747,8 @@ void Screen12(){
       lcd.print(tm.Year);
 
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+      if(debounce2.read()){
         
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
         tm.Month = encoderPos;
         lcd.clear();
         zeitstellen++;
@@ -1813,9 +1789,8 @@ void Screen12(){
       lcd.print(F("."));
       lcd.print(2000 + encoderPos); // the nex year 3000 bug :)
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
-        
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
+      if(debounce2.read()){
+
         tm.Year = 2000 + encoderPos;
         lcd.clear();
         zeitstellen++;
@@ -1857,9 +1832,8 @@ void Screen12(){
 
       lcd.print(tm.Second);
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
-        
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
+      if(debounce2.read()){
+
         tm.Hour = encoderPos;
         lcd.clear();
         zeitstellen++;
@@ -1901,9 +1875,8 @@ void Screen12(){
 
       lcd.print(tm.Second);
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
-        
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
+      if(debounce2.read()){
+
         tm.Minute = encoderPos;
         lcd.clear();
         zeitstellen++;
@@ -1960,9 +1933,7 @@ void Screen12(){
       lcd.setCursor(0, 3);
       lcd.print("Zeit zu setzen.");
 
-      if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
-        
-        wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
+      if(debounce2.read()){
         
         // Set RTC time.
         RTC.write(tm);
@@ -1979,6 +1950,7 @@ void Screen12(){
 }
 
 void Screen13(){
+  
     if(encoderPos > 1){
       
       encoderPos = 1;
@@ -1999,7 +1971,7 @@ void Screen13(){
     lcd.setCursor(0, 2);
     
     switch(encoderPos){
-      
+
       case 0:
         lcd.print("nein");
         break;
@@ -2008,10 +1980,8 @@ void Screen13(){
         break;
         
     }
-    
-    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
-      
-      wechslertGedrueckt = 0;
+
+    if(debounce2.read()){
       
       if(encoderPos == 0)
         screen = 1;
@@ -2049,10 +2019,9 @@ void Screen14(){
     lcd.print(encoderPos);
     lcd.print(F(" Uhr"));
     
-    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+    if(debounce2.read()){
       
       setings_a.startwasser = encoderPos;
-      wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
       write_EEPROM++;
       lcd.clear();
       screen = 15;
@@ -2085,10 +2054,9 @@ void Screen15(){
     lcd.print(encoderPos);
     lcd.print(F(" Min."));
     
-    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+    if(debounce2.read()){
       
       setings_a.startwassermin = encoderPos;
-      wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
       write_EEPROM++;
       lcd.clear();
       screen = 16;
@@ -2120,10 +2088,9 @@ void Screen16(){
     lcd.print(encoderPos);
     lcd.print(F(" Min."));
 
-    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
+    if(debounce2.read()){
       
       setings_a.auswasser = encoderPos;
-      wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
       write_EEPROM++;
       lcd.clear();
       screen = 17;
@@ -2155,10 +2122,9 @@ void Screen17(){
     lcd.print(encoderPos);
     lcd.print(F(" Sek."));
  
-    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
-      
+    if(debounce2.read()){
+
       setings_a.sekauswasser = encoderPos;
-      wechslertGedrueckt = 0;  // setzt gedrückten Taster zurück
       write_EEPROM++;
       lcd.clear();
       screen = 18;
@@ -2168,7 +2134,6 @@ void Screen17(){
 }
 
 void Screen18(){
-
 
     lcd.setCursor(0, 0);
     lcd.print(F("Startzeit:"));
@@ -2206,9 +2171,8 @@ void Screen18(){
 
     lcd.print(setings_a.sekauswasser);
 
-    if((millis() - wechslertZeit > entprellZeit) && wechslertGedrueckt == 1){
-      
-      wechslertGedrueckt = 0;
+    if(debounce2.read()){
+
       asm volatile ("jmp 0");
       
     }
