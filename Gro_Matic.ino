@@ -75,12 +75,13 @@
 // GY-30 Lux Meter
 #define BH1750_address 0x23  // I2C Addresse des GY-30
 
+#define entprellZeit 500  // Zeit für Entprellung, anpassen!
+
 //Backlight button
 #define BUTTON_PIN 10
 
 //Programm modus und reset Taster
 #define wechslertPin A1  // Pinnummer des Tasters für zum Lichtmodus wechseln und Eprom Reset
-#define entprellZeit 200  // Zeit für Entprellung, anpassen!
 #define screenPin 4  // Pin für Taster zum umschalten der LCD seite
 #define encoderPinA 2
 #define encoderPinB 3
@@ -476,25 +477,33 @@ void gy30(){ // Luxmeter
 bool displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
 
   static bool hintergrund;
+  static bool once;
 
-  // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-  if(debounce.read() == LOW)
-    hintergrund = !hintergrund; // LCD Seite wird um +1 erhöht
+  debounce.update();
+  
+  if(debounce.fell()){
+    
+    hintergrund = !hintergrund;
+    once = true;
+    
+  }
 
-  if(hintergrund){ // display ist an
+  if(hintergrund && once){ // display ist an
 
     lcd.display();
     lcd.setBacklight(255);
 
-  } else {
-    
+  } else if(once){
+
     lcd.setBacklight(0);
     lcd.noDisplay();
     
   }
 
+  once = false;
+
   return hintergrund;
-  
+
 }
 
 void tagec(){ // bluete Tagecounter
@@ -561,6 +570,8 @@ void readEEPROM(){
 
   if(setings_a.MAGIC_NUMBER != MAGIC_NUMBER ){ // Vergleiche Magic number wenn ungleich schreibe EEPROM mit defaults neu.
 
+    Serial.println("write defaults!");
+
     setings_a = setings_b; // settings_a ist b (defaults)
     EEPROM.put(0, setings_b); // Schreibe settings_b, enthält default einstellungen.
 
@@ -590,21 +601,8 @@ void updateEEPROM(){
 
 }
 
-void setup(){
+void SplashScreen(){
 
-  Serial.begin(9600);
-
-  /* Lese EEPROM in setings oder schreibe defaults in EEPROM */
-  readEEPROM();
-
-  Wire.begin();
-  lcd.begin(20, 4); // stelle LCD groesse ein
-  bme.begin();
-
-  setSyncProvider(RTC.get);   // Function to get the time from RTC
-  setSyncInterval(1000*60*5); // (5 Minuten)
-
-  // Splashscreen
   lcd.setCursor(0, 0);
   lcd.print(F("..:: Gro-Matic ::.."));
   lcd.setCursor(0, 2);
@@ -613,9 +611,26 @@ void setup(){
   lcd.print(F(" V. 0.9.9.9 by zrox"));
   Alarm.delay(3000);
   lcd.clear();
+  
+}
+
+void setup(){
+
+  Serial.begin(9600);
+
+  /* Lese EEPROM in setings oder schreibe defaults in EEPROM */
+  readEEPROM();
+  Wire.begin();
+  lcd.begin(20, 4); // stelle LCD groesse ein
+  bme.begin();
+  
+  setSyncProvider(RTC.get);   // Function to get the time from RTC
+  setSyncInterval(1000*60*5); // (5 Minuten)
 
   BH1750_Init(BH1750_address);
   Alarm.delay(500);
+
+  SplashScreen();
 
   digitalWrite(licht_relay_p, HIGH);  // alle Relais Pins beim Start auf HIGH setzen und damit ausschalten.
   digitalWrite(lsr_relay_p, HIGH);
@@ -628,6 +643,7 @@ void setup(){
   pinMode(lsr_relay_p,  OUTPUT);
   pinMode(ventilator, OUTPUT);
   pinMode(irrigation, OUTPUT);
+  
   pinMode(BUTTON_PIN, INPUT_PULLUP);  // den backlight Taster als Input setzen
   pinMode(wechslertPin, INPUT_PULLUP);  // Modus-Taster Pin wird als Eingang gesetzt
   pinMode(screenPin, INPUT_PULLUP);  // Modus-Taster Pin wird als Eingang gesetzt
@@ -638,15 +654,16 @@ void setup(){
   digitalWrite(encoderPinA, HIGH);
   digitalWrite(encoderPinB, HIGH);
 
-  // After setting up the button, setup the Bounce instance
+  // Backlight toogle.
   debounce.attach(BUTTON_PIN);
-  debounce.interval(entprellZeit); // interval in ms
-  
-  debounce2.attach(wechslertPin);
-  debounce2.interval(entprellZeit);
+  debounce.interval(500); // interval in ms
 
-  debounce3.attach(screenPin);
-  debounce3.interval(entprellZeit);
+  // sweitch screen.
+  debounce2.attach(screenPin);
+  debounce2.interval(500);
+
+  debounce3.attach(wechslertPin);
+  debounce3.interval(500);
 
   attachInterrupt(0, doEncoderA, CHANGE); // Encoder pin an interrupt 0 (pin 2)
   attachInterrupt(1, doEncoderB, CHANGE); // Encoder pin an interrupt 1 (pin 3)
@@ -668,13 +685,7 @@ void loop(){
   // Alarm tasks.
   Alarm.delay(0);
 
-  // Debounce buttons.
-  debounce.update();
-  debounce2.update();
-  debounce3.update();
-
   LTI();  // ruft die einfache LTI steuerung auf und prueft Temp und RLF und schaltet den Stufentrafo zwischen zwei Stufen.
-  displaybeleuchtung();
 
   rotating = true;  // reset the debouncer
 
@@ -838,12 +849,15 @@ void Screens(){
 
   static unsigned long screenBlock;
   static uint8_t screen;
-
+  
   if(!displaybeleuchtung() || millis() < screenBlock + millis())
     return;
 
-  if(debounce3.read() == LOW){
-    
+//  screenBlock = 0;
+
+  debounce2.update();
+  if(debounce2.fell()){
+
     screen++;
     lcd.clear();
     
@@ -900,8 +914,8 @@ void Screen1(uint8_t &screen, unsigned long &screenBlock){
     DS3231temp();  // prüfe gehaeuse temp und gib sie auf dem display aus
     gy30();  // Luxmeter
     
-    // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-    if(debounce3.read() == LOW){
+    debounce3.update();
+    if(debounce3.fell()){
       
       setings_a.lichtmodus++;  // lichtmodus wird um +1 erhöht
       write_EEPROM++;
@@ -1019,8 +1033,8 @@ void Screen2(uint8_t &screen, unsigned long &screenBlock){
     static uint8_t letztertag;
     static uint8_t letztermonat;
     
-    // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Tagecounter gelöscht werden ...
-    if(debounce3.read() == LOW){
+    debounce3.update();
+    if(debounce3.fell()){
       
       for(int i = 0; i < 512; i++)
         EEPROM.write(i, 0);
@@ -1059,9 +1073,9 @@ void Screen2(uint8_t &screen, unsigned long &screenBlock){
 }
 
 void Screen3(uint8_t &screen, unsigned long &screenBlock){
-    
-    // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-    if(debounce3.read() == LOW){
+
+    debounce3.update();
+    if(debounce3.fell()){
       
       setings_a.autowasser++;
       write_EEPROM++;
@@ -1134,8 +1148,9 @@ void Screen4(uint8_t &screen, unsigned long &screenBlock){
     lcd.print(F(":00-"));
     lcd.print(setings_a.bloom_licht_aus);
     lcd.print(F(":00 Uhr"));
-    
-    if(debounce3.read() == LOW){
+
+    debounce3.update();
+    if(debounce3.fell()){
       
       lcd.clear();
       screenBlock = 50;
@@ -1170,8 +1185,9 @@ void Screen5(uint8_t &screen, unsigned long &screenBlock){
     lcd.print(F("C:"));
     lcd.print(setings_a.bloom_rlf);
     lcd.print(F("%"));
-    
-    if(debounce3.read() == LOW){
+
+    debounce3.update();
+    if(debounce3.fell()){
       
       lcd.clear();
       screenBlock = 200;
@@ -1225,7 +1241,8 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
 
-      if(debounce3.read() == LOW){
+      debounce3.update();
+      if(debounce3.fell()){
         
         setings_a.lsr_an = encoderPos;
         write_EEPROM++;
@@ -1256,8 +1273,9 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
       lcd.print(F("hlen. optimale"));
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
- 
-      if(debounce3.read() == LOW){
+
+      debounce3.update();
+      if(debounce3.fell()){
         
         if(encoderPos == 0){
           
@@ -1298,8 +1316,9 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
       lcd.print(F("hlen. optimale"));
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
-      
-      if(debounce3.read() == LOW){
+
+      debounce3.update();
+      if(debounce3.fell()){
         
         setings_a.grow_licht_an = encoderPos;
         write_EEPROM++;
@@ -1330,8 +1349,9 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
       lcd.print(F("hlen. optimale"));
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
-      
-      if(debounce3.read() == LOW){
+
+      debounce3.update();
+      if(debounce3.fell()){
         
         if(encoderPos == 0){
           
@@ -1373,7 +1393,8 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 12 Stunden"));
 
-      if(debounce3.read() == LOW){
+      debounce3.update();
+      if(debounce3.fell()){
         
         setings_a.bloom_licht_an = encoderPos;
         write_EEPROM++;
@@ -1404,7 +1425,8 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
       lcd.print(F("hlen. optimale"));
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 12 Stunden"));
-      
+
+      debounce3.update();
       if(debounce3.read()){
         
         if(encoderPos == 0){
@@ -1463,8 +1485,9 @@ void Screen8(uint8_t &screen, unsigned long &screenBlock){
       lcd.print(F(" - 25"));
       lcd.print((char)223);
       lcd.print(F("C"));
-      
-      if(debounce3.read() == LOW){
+
+      debounce3.update();
+      if(debounce3.fell()){
         
         setings_a.lsr_temp = encoderPos;
         write_EEPROM++;
@@ -1493,8 +1516,9 @@ void Screen8(uint8_t &screen, unsigned long &screenBlock){
       lcd.print(F(" - 23"));
       lcd.print((char)223);
       lcd.print(F("C"));
-      
-      if(debounce3.read() == LOW){
+
+      debounce3.update();
+      if(debounce3.fell()){
         
         setings_a.grow_temp = encoderPos;
         write_EEPROM++;
@@ -1523,8 +1547,9 @@ void Screen8(uint8_t &screen, unsigned long &screenBlock){
       lcd.print(F(" - 22"));
       lcd.print((char)223);
       lcd.print(F("C"));
-      
-      if(debounce3.read() == LOW){
+
+      debounce3.update();
+      if(debounce3.fell()){
 
         setings_a.bloom_temp = encoderPos;
         write_EEPROM++;
@@ -1562,8 +1587,9 @@ void Screen9(uint8_t &screen, unsigned long &screenBlock){
       lcd.print(F("optimaler bereich"));
       lcd.setCursor(0, 2);
       lcd.print(F("zwischen 55 % - 60 %"));
-      
-      if(debounce3.read() == LOW){
+
+      debounce3.update();
+      if(debounce3.fell()){
         
         setings_a.lsr_rlf = (double) encoderPos;
         write_EEPROM++;
@@ -1586,8 +1612,9 @@ void Screen9(uint8_t &screen, unsigned long &screenBlock){
       lcd.print(F("optimaler bereich"));
       lcd.setCursor(0, 2);
       lcd.print(F("zwischen 50 % - 55 %"));
-      
-      if(debounce3.read() == LOW){
+
+      debounce3.update();
+      if(debounce3.fell()){
         
         setings_a.grow_rlf = (double) encoderPos;
         write_EEPROM++;
@@ -1612,8 +1639,9 @@ void Screen9(uint8_t &screen, unsigned long &screenBlock){
       lcd.print(F("ber"));
       lcd.setCursor(0, 2);
       lcd.print(F("40 % RLF"));
-      
-      if(debounce3.read() == LOW){
+
+      debounce3.update();
+      if(debounce3.fell()){
         
         setings_a.bloom_rlf = (double) encoderPos;
         write_EEPROM++;
@@ -1654,7 +1682,8 @@ void Screen10(uint8_t &screen, unsigned long &screenBlock){
     const char *jein[] = {"nein", "ja"};
     lcd.print(jein[encoderPos]);
 
-    if(debounce3.read() == LOW){
+    debounce3.update();
+    if(debounce3.fell()){
       
       if(encoderPos == 0)
         screen = 13;
@@ -1708,7 +1737,8 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
       lcd.print(F("."));
       lcd.print(tm.Year);
 
-      if(debounce3.read() == LOW){
+      debounce3.update();
+      if(debounce3.fell()){
         
         tm.Day = encoderPos;
         lcd.clear();
@@ -1749,7 +1779,8 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
       lcd.print(tm.Year);
 
 
-      if(debounce3.read() == LOW){
+      debounce3.update();
+      if(debounce3.fell()){
         
         tm.Month = encoderPos;
         lcd.clear();
@@ -1791,7 +1822,8 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
       lcd.print(F("."));
       lcd.print(2000 + encoderPos); // the nex year 3000 bug :)
 
-      if(debounce3.read() == LOW){
+      debounce3.update();
+      if(debounce3.fell()){
 
         tm.Year = 2000 + encoderPos;
         lcd.clear();
@@ -1834,7 +1866,8 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
 
       lcd.print(tm.Second);
 
-      if(debounce3.read() == LOW){
+      debounce3.update();
+      if(debounce3.fell()){
 
         tm.Hour = encoderPos;
         lcd.clear();
@@ -1877,7 +1910,8 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
 
       lcd.print(tm.Second);
 
-      if(debounce3.read() == LOW){
+      debounce3.update();
+      if(debounce3.fell()){
 
         tm.Minute = encoderPos;
         lcd.clear();
@@ -1935,7 +1969,8 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
       lcd.setCursor(0, 3);
       lcd.print("Zeit zu setzen.");
 
-      if(debounce3.read() == LOW){
+      debounce3.update();
+      if(debounce3.fell()){
         
         // Set RTC time.
         RTC.write(tm);
@@ -1975,7 +2010,8 @@ void Screen13(uint8_t &screen, unsigned long &screenBlock){
     const char *jein[] = {"nein", "ja"};
     lcd.print(jein[encoderPos]);
 
-    if(debounce3.read() == LOW){
+    debounce3.update();
+    if(debounce3.fell()){
       
       if(encoderPos == 0)
         screen = 1;
@@ -2012,8 +2048,9 @@ void Screen14(uint8_t &screen, unsigned long &screenBlock){
       
     lcd.print(encoderPos);
     lcd.print(F(" Uhr"));
-    
-    if(debounce3.read() == LOW){
+
+    debounce3.update();
+    if(debounce3.fell()){
       
       setings_a.startwasser = encoderPos;
       write_EEPROM++;
@@ -2047,8 +2084,9 @@ void Screen15(uint8_t &screen, unsigned long &screenBlock){
 
     lcd.print(encoderPos);
     lcd.print(F(" Min."));
-    
-    if(debounce3.read() == LOW){
+
+    debounce3.update();
+    if(debounce3.fell()){
       
       setings_a.startwassermin = encoderPos;
       write_EEPROM++;
@@ -2082,7 +2120,8 @@ void Screen16(uint8_t &screen, unsigned long &screenBlock){
     lcd.print(encoderPos);
     lcd.print(F(" Min."));
 
-    if(debounce3.read() == LOW){
+    debounce3.update();
+    if(debounce3.fell()){
       
       setings_a.auswasser = encoderPos;
       write_EEPROM++;
@@ -2115,8 +2154,9 @@ void Screen17(uint8_t &screen, unsigned long &screenBlock){
  
     lcd.print(encoderPos);
     lcd.print(F(" Sek."));
- 
-    if(debounce3.read() == LOW){
+
+    debounce3.update();
+    if(debounce3.fell()){
 
       setings_a.sekauswasser = encoderPos;
       write_EEPROM++;
@@ -2165,7 +2205,8 @@ void Screen18(uint8_t &screen, unsigned long &screenBlock){
 
     lcd.print(setings_a.sekauswasser);
 
-    if(debounce3.read() == LOW){
+    debounce3.update();
+    if(debounce3.fell()){
 
       asm volatile ("jmp 0");
       
