@@ -152,9 +152,6 @@ struct setings_t {
 byte write_EEPROM = false; // false = 0;
 bool save_EEPROM  = false;
 
-//Displayfunktionen
-//byte hintergrund = 1;    // schalte dispaly an menue
-
 // Encoder
 volatile unsigned int encoderPos = 0;  // Encoder counter
 volatile bool rotating  = false;
@@ -260,9 +257,6 @@ void p(const __FlashStringHelper *fmt, ...){
 
 void displayTime(){ // anzeige der Zeit und Datum auf dem Display
   
-  if(!displaybeleuchtung)
-    return;
-    
   lcd.setCursor(0, 0);
     
   if(hour() < 10)
@@ -320,23 +314,20 @@ double temp(){
 double hum(){
 
   static unsigned long m;
-  static double r;
+  static double h;
 
   if(millis() - m > 1000){
 
-    r = bme.readHumidity();
+    h = bme.readHumidity();
     m = millis();
     
   }
 
-  return r;
+  return h;
 
 }
 
 void bme280(){ // Anzeige der Temp und RLF auf dem Display
-
-  if(!displaybeleuchtung)
-    return;
     
   static unsigned long m;
   
@@ -363,9 +354,6 @@ void bme280(){ // Anzeige der Temp und RLF auf dem Display
 }
 
 void DS3231temp(){  // hole und zeige auf dem Display die Case Temperatur der RTC
-
-  if(!displaybeleuchtung)
-    return;
 
   lcd.setCursor(0, 3);
   lcd.print(F("Case:"));
@@ -459,9 +447,6 @@ void LTI(){ // die Funtion des Rohrventilators
 }
 
 void gy30(){ // Luxmeter
-  
-  if(!displaybeleuchtung)
-    return;
 
   byte buff[2];
   float valf = 0;
@@ -850,6 +835,9 @@ void loop(){
 }
 
 void Screens(){
+
+  if(!displaybeleuchtung())
+    return;
 
   static unsigned long screenBlock;
   static uint8_t screen;
