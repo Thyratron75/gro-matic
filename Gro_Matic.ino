@@ -483,7 +483,7 @@ void displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
   debounce.update();
 
   // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-  if(debounce.read())
+  if(debounce.read() == LOW)
     hintergrund++; // LCD Seite wird um +1 erhöht
 
   if(hintergrund == 1){ // display ist an
@@ -841,7 +841,7 @@ void Screens(){
 
   debounce3.update();
   
-  if(debounce2.read()){
+  if(debounce3.read() == LOW){
     
     screen++;
     lcd.clear();
@@ -900,7 +900,7 @@ void Screen1(){
     gy30();  // Luxmeter
     
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-    if(debounce2.read()){
+    if(debounce3.read() == LOW){
       
       setings_a.lichtmodus++;  // lichtmodus wird um +1 erhöht
       write_EEPROM++;
@@ -1019,7 +1019,7 @@ void Screen2(){
     static uint8_t letztermonat;
     
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Tagecounter gelöscht werden ...
-    if(debounce2.read()){
+    if(debounce3.read() == LOW){
       
       for(int i = 0; i < 512; i++)
         EEPROM.write(i, 0);
@@ -1060,7 +1060,7 @@ void Screen2(){
 void Screen3(){
     
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
-    if(debounce2.read()){
+    if(debounce3.read() == LOW){
       
       setings_a.autowasser++;
       write_EEPROM++;
@@ -1134,7 +1134,7 @@ void Screen4(){
     lcd.print(setings_a.bloom_licht_aus);
     lcd.print(F(":00 Uhr"));
     
-    if(debounce2.read()){
+    if(debounce3.read() == LOW){
       
       lcd.clear();
       Alarm.delay(50);
@@ -1169,7 +1169,7 @@ void Screen5(){
     lcd.print(setings_a.bloom_rlf);
     lcd.print(F("%"));
     
-    if(debounce2.read()){
+    if(debounce3.read() == LOW){
       
       lcd.clear();
       Alarm.delay(200);
@@ -1223,7 +1223,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
 
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
         
         setings_a.lsr_an = encoderPos;
         write_EEPROM++;
@@ -1255,7 +1255,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
  
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
         
         if(encoderPos == 0){
           
@@ -1297,7 +1297,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
       
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
         
         setings_a.grow_licht_an = encoderPos;
         write_EEPROM++;
@@ -1329,7 +1329,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 18 Stunden"));
       
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
         
         if(encoderPos == 0){
           
@@ -1371,7 +1371,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 12 Stunden"));
 
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
         
         setings_a.bloom_licht_an = encoderPos;
         write_EEPROM++;
@@ -1403,7 +1403,7 @@ void Screen7(){
       lcd.setCursor(0, 3);
       lcd.print(F("Dauer 12 Stunden"));
       
-      if(debounce2.read()){
+      if(debounce3.read()){
         
         if(encoderPos == 0){
           
@@ -1462,7 +1462,7 @@ void Screen8(){
       lcd.print((char)223);
       lcd.print(F("C"));
       
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
         
         setings_a.lsr_temp = encoderPos;
         write_EEPROM++;
@@ -1492,7 +1492,7 @@ void Screen8(){
       lcd.print((char)223);
       lcd.print(F("C"));
       
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
         
         setings_a.grow_temp = encoderPos;
         write_EEPROM++;
@@ -1522,7 +1522,7 @@ void Screen8(){
       lcd.print((char)223);
       lcd.print(F("C"));
       
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
 
         setings_a.bloom_temp = encoderPos;
         write_EEPROM++;
@@ -1561,7 +1561,7 @@ void Screen9(){
       lcd.setCursor(0, 2);
       lcd.print(F("zwischen 55 % - 60 %"));
       
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
         
         setings_a.lsr_rlf = (double) encoderPos;
         write_EEPROM++;
@@ -1585,7 +1585,7 @@ void Screen9(){
       lcd.setCursor(0, 2);
       lcd.print(F("zwischen 50 % - 55 %"));
       
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
         
         setings_a.grow_rlf = (double) encoderPos;
         write_EEPROM++;
@@ -1611,7 +1611,7 @@ void Screen9(){
       lcd.setCursor(0, 2);
       lcd.print(F("40 % RLF"));
       
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
         
         setings_a.bloom_rlf = (double) encoderPos;
         write_EEPROM++;
@@ -1652,7 +1652,7 @@ void Screen10(){
     const char jein[2][5] = {"nein", "ja"};
     lcd.print(jein[encoderPos]);
 
-    if(debounce2.read()){
+    if(debounce3.read() == LOW){
       
       if(encoderPos == 0)
         screen = 13;
@@ -1706,7 +1706,7 @@ void Screen12(){
       lcd.print(F("."));
       lcd.print(tm.Year);
 
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
         
         tm.Day = encoderPos;
         lcd.clear();
@@ -1747,7 +1747,7 @@ void Screen12(){
       lcd.print(tm.Year);
 
 
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
         
         tm.Month = encoderPos;
         lcd.clear();
@@ -1789,7 +1789,7 @@ void Screen12(){
       lcd.print(F("."));
       lcd.print(2000 + encoderPos); // the nex year 3000 bug :)
 
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
 
         tm.Year = 2000 + encoderPos;
         lcd.clear();
@@ -1832,7 +1832,7 @@ void Screen12(){
 
       lcd.print(tm.Second);
 
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
 
         tm.Hour = encoderPos;
         lcd.clear();
@@ -1875,7 +1875,7 @@ void Screen12(){
 
       lcd.print(tm.Second);
 
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
 
         tm.Minute = encoderPos;
         lcd.clear();
@@ -1933,7 +1933,7 @@ void Screen12(){
       lcd.setCursor(0, 3);
       lcd.print("Zeit zu setzen.");
 
-      if(debounce2.read()){
+      if(debounce3.read() == LOW){
         
         // Set RTC time.
         RTC.write(tm);
@@ -1981,7 +1981,7 @@ void Screen13(){
         
     }
 
-    if(debounce2.read()){
+    if(debounce3.read() == LOW){
       
       if(encoderPos == 0)
         screen = 1;
@@ -2019,7 +2019,7 @@ void Screen14(){
     lcd.print(encoderPos);
     lcd.print(F(" Uhr"));
     
-    if(debounce2.read()){
+    if(debounce3.read() == LOW){
       
       setings_a.startwasser = encoderPos;
       write_EEPROM++;
@@ -2054,7 +2054,7 @@ void Screen15(){
     lcd.print(encoderPos);
     lcd.print(F(" Min."));
     
-    if(debounce2.read()){
+    if(debounce3.read() == LOW){
       
       setings_a.startwassermin = encoderPos;
       write_EEPROM++;
@@ -2088,7 +2088,7 @@ void Screen16(){
     lcd.print(encoderPos);
     lcd.print(F(" Min."));
 
-    if(debounce2.read()){
+    if(debounce3.read() == LOW){
       
       setings_a.auswasser = encoderPos;
       write_EEPROM++;
@@ -2122,7 +2122,7 @@ void Screen17(){
     lcd.print(encoderPos);
     lcd.print(F(" Sek."));
  
-    if(debounce2.read()){
+    if(debounce3.read() == LOW){
 
       setings_a.sekauswasser = encoderPos;
       write_EEPROM++;
@@ -2171,7 +2171,7 @@ void Screen18(){
 
     lcd.print(setings_a.sekauswasser);
 
-    if(debounce2.read()){
+    if(debounce3.read() == LOW){
 
       asm volatile ("jmp 0");
       
