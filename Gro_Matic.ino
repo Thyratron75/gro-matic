@@ -214,7 +214,7 @@ byte BH1750_Read(int address, byte *buff){
     i++;
 
   }
-  
+
   Wire.endTransmission();
 
   return i;
@@ -303,6 +303,38 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
 
 }
 
+double temp(){
+
+  static unsigned long m;
+  static double t;
+
+  if(millis() - m > 1000){
+    
+    t = bme.readTemperature();
+    m = millis();
+    
+  }
+
+  return t;
+
+}
+
+double hum(){
+
+  static unsigned long m;
+  static double r;
+
+  if(millis() - m > 1000){
+
+    r = bme.readHumidity();
+    m = millis();
+    
+  }
+
+  return r;
+
+}
+
 void bme280(){ // Anzeige der Temp und RLF auf dem Display
 
   if(hintergrund == 1){
@@ -310,20 +342,20 @@ void bme280(){ // Anzeige der Temp und RLF auf dem Display
     static unsigned long m;
   
     if(millis() - m > 3000){
-      
+
       m = millis();
 
       // DISPLAY DATA
-      lcd.setCursor(0, 1);           // setze curserposition
+      lcd.setCursor(0, 1);  // setze curserposition
       lcd.write(THERMO);    // zeichne thermometer auf dem Display, siehe auch abschnitt Custom Caracter bzw. void setup
       lcd.print(F(" "));
-      lcd.print(int(bme.readTemperature()));
+      lcd.print((int) temp());
       lcd.print((char)223);
       lcd.print(F("C "));
       lcd.print(F(" "));
       lcd.write(RLF);    // zeichne Wassertropfen auf dem Display, siehe auch abschnitt Custom Caracter bzw. void setup
       lcd.print(F(" "));
-      lcd.print(int(bme.readHumidity()));
+      lcd.print((int) hum());
       lcd.print(F("%"));
       lcd.print(F("   "));
       
@@ -340,38 +372,25 @@ void DS3231temp(){  // hole und zeige auf dem Display die Case Temperatur der RT
     lcd.setCursor(0, 3);
     lcd.print(F("Case:"));
     lcd.print(RTC.temperature() / 4);
-    lcd.print((char)223);
+    lcd.print((char) 223);
     lcd.print(F("C"));
-    
+
   }
 
 }
 
 void LTI(){ // die Funtion des Rohrventilators 
 
-  static unsigned long m;
-
-  static double ltitemp;
-  static double ltirlf;
-
-  if(millis() - m > 1000){
-    
-    m = millis();
-    ltitemp = bme.readTemperature();
-    ltirlf = bme.readHumidity();
-    
-  }
-  
   // Pruefe im LSR oder Grow Modus Temperatur und RLF ist die Temp unter 24 Grad C oder unter RLF unter 55%
   // bleibt Stufentrafo gedimmt (z.B. 80V)
   // ist Temp oder gleich oder höher wird auf hoechste stufe (z.B. 190V) geschaltet.
   
   if(setings_a.lichtmodus == LSR){ 
     
-    if(ltitemp < setings_a.lsr_temp)
+    if(temp() < setings_a.lsr_temp)
       digitalWrite(luft_relay, LOW);
 
-    if(ltirlf < setings_a.lsr_rlf){
+    if(hum() < setings_a.lsr_rlf){
       
       digitalWrite(luft_relay, LOW);
     
@@ -388,10 +407,10 @@ void LTI(){ // die Funtion des Rohrventilators
   // ist Temp oder gleich oder höher wird auf hoechste stufe (z.B. 190V) geschaltet.
   if(setings_a.lichtmodus == GROW){ 
     
-    if(ltitemp < setings_a.grow_temp)
+    if(temp() < setings_a.grow_temp)
       digitalWrite(luft_relay, LOW);
     
-    if(ltirlf < setings_a.grow_rlf){
+    if(hum() < setings_a.grow_rlf){
       
       digitalWrite(luft_relay, LOW);
       
@@ -406,10 +425,10 @@ void LTI(){ // die Funtion des Rohrventilators
   // Pruefe im Uebergangsmodus Grow>Bloom Temperatur und RLF
   if(setings_a.lichtmodus == BLOOM){
     
-    if(ltitemp < setings_a.grow_temp)
+    if(temp() < setings_a.grow_temp)
       digitalWrite(luft_relay, LOW);
     
-    if(ltirlf < setings_a.grow_rlf){
+    if(hum() < setings_a.grow_rlf){
       
       digitalWrite(luft_relay, LOW);
       
@@ -426,10 +445,10 @@ void LTI(){ // die Funtion des Rohrventilators
   // ist Temp oder RLF gleich oder höher wird auf hoechste stufe (z.B. 190V) geschaltet.
   if(setings_a.lichtmodus == BLOOM){
     
-    if(ltitemp < setings_a.bloom_temp)
+    if(temp() < setings_a.bloom_temp)
       digitalWrite(luft_relay, LOW);
  
-    if(ltirlf < setings_a.bloom_rlf){
+    if(hum() < setings_a.bloom_rlf){
       
       digitalWrite(luft_relay, LOW);
       
@@ -602,8 +621,8 @@ void setup(){
   lcd.begin(20, 4); // stelle LCD groesse ein
   bme.begin();
 
-  setSyncProvider(RTC.get); // Function to get the time from the RTC
-  setSyncInterval(1000*60*5);    // Set the number of seconds between re-sync (5 Minuten)
+  setSyncProvider(RTC.get);   // Function to get the time from RTC
+  setSyncInterval(1000*60*5); // (5 Minuten)
 
   // Splashscreen
   lcd.setCursor(0, 0);
@@ -674,16 +693,14 @@ void loop(){
   debounce2.update();
   debounce3.update();
 
-  //********************************************************************
   LTI();  // ruft die einfache LTI steuerung auf und prueft Temp und RLF und schaltet den Stufentrafo zwischen zwei Stufen.
   displaybeleuchtung();
-  //********************************************************************
 
   rotating = true;  // reset the debouncer
 
   if(lastReportedPos != encoderPos)
     lastReportedPos = encoderPos;
-  
+
   //***********************************************
 
   if(setings_a.lichtmodus == LSR){
@@ -841,8 +858,15 @@ void Screens(){
   static unsigned long screenBlock;
   static uint8_t screen;
 
-  if(millis() + screenBlock > millis())
+  if(millis() < screenBlock + millis()){
+    
     return;
+
+  } else {
+
+    screenBlock = 0;
+    
+  }
 
   if(debounce3.read() == LOW){
     
