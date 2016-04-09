@@ -153,14 +153,13 @@ byte write_EEPROM = false; // false = 0;
 bool save_EEPROM  = false;
 
 //Displayfunktionen
-byte hintergrund = 1;    // schalte dispaly an menue
+//byte hintergrund = 1;    // schalte dispaly an menue
 
 // Encoder
 volatile unsigned int encoderPos = 0;  // Encoder counter
 volatile bool rotating  = false;
 volatile bool A_set     = false;
 volatile bool B_set     = false;
-unsigned int lastReportedPos = 1;
 
 byte temp_bereich = 0;
 byte rlf_bereich  = 0;
@@ -261,45 +260,44 @@ void p(const __FlashStringHelper *fmt, ...){
 
 void displayTime(){ // anzeige der Zeit und Datum auf dem Display
   
-  if(hintergrund == 1){
-
-    lcd.setCursor(0, 0);
+  if(!displaybeleuchtung)
+    return;
     
-    if(hour() < 10)
-      lcd.print("0");
+  lcd.setCursor(0, 0);
+    
+  if(hour() < 10)
+    lcd.print("0");
  
-    lcd.print(hour(), DEC);
+  lcd.print(hour(), DEC);
 
-    lcd.print(":");
+  lcd.print(":");
     
-    if(minute() < 10)
-      lcd.print("0");
+  if(minute() < 10)
+    lcd.print("0");
       
-    lcd.print(minute(), DEC);
+  lcd.print(minute(), DEC);
     
-    lcd.print(":");
+  lcd.print(":");
     
-    if(second() < 10)
-      lcd.print("0");
+  if(second() < 10)
+    lcd.print("0");
 
-    lcd.print(second(), DEC);
-    lcd.print(" ");
+  lcd.print(second(), DEC);
+  lcd.print(" ");
 
-    const char c_dayOfWeek[7][3]={"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
-    lcd.print(c_dayOfWeek[weekday(now()) -1]);
+  const char *c_dayOfWeek[] = {"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
+  lcd.print(c_dayOfWeek[weekday(now()) -1]);
  
-    lcd.print(" ");
+  lcd.print(" ");
     
-    if(day() < 10)
-      lcd.print("0");
+  if(day() < 10)
+    lcd.print("0");
 
-    lcd.print(day(), DEC);
-    lcd.print(" ");
+  lcd.print(day(), DEC);
+  lcd.print(" ");
  
-    const char c_Month[12][4]={"Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"};
-    lcd.print(c_Month[month() -1]);
-
-  }
+  const char *c_Month[] = {"Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"};
+  lcd.print(c_Month[month() -1]);
 
 }
 
@@ -337,45 +335,43 @@ double hum(){
 
 void bme280(){ // Anzeige der Temp und RLF auf dem Display
 
-  if(hintergrund == 1){
-
-    static unsigned long m;
-  
-    if(millis() - m > 3000){
-
-      m = millis();
-
-      // DISPLAY DATA
-      lcd.setCursor(0, 1);  // setze curserposition
-      lcd.write(THERMO);    // zeichne thermometer auf dem Display, siehe auch abschnitt Custom Caracter bzw. void setup
-      lcd.print(F(" "));
-      lcd.print((int) temp());
-      lcd.print((char)223);
-      lcd.print(F("C "));
-      lcd.print(F(" "));
-      lcd.write(RLF);    // zeichne Wassertropfen auf dem Display, siehe auch abschnitt Custom Caracter bzw. void setup
-      lcd.print(F(" "));
-      lcd.print((int) hum());
-      lcd.print(F("%"));
-      lcd.print(F("   "));
-      
-    }
+  if(!displaybeleuchtung)
+    return;
     
-  }
+  static unsigned long m;
   
+  if(millis() - m > 3000){
+    
+    m = millis();
+
+    // DISPLAY DATA
+    lcd.setCursor(0, 1);  // setze curserposition
+    lcd.write(THERMO);    // zeichne thermometer auf dem Display, siehe auch abschnitt Custom Caracter bzw. void setup
+    lcd.print(F(" "));
+    lcd.print((int) temp());
+    lcd.print((char)223);
+    lcd.print(F("C "));
+    lcd.print(F(" "));
+    lcd.write(RLF);    // zeichne Wassertropfen auf dem Display, siehe auch abschnitt Custom Caracter bzw. void setup
+    lcd.print(F(" "));
+    lcd.print((int) hum());
+    lcd.print(F("%"));
+    lcd.print(F("   "));
+      
+  }
+
 }
 
 void DS3231temp(){  // hole und zeige auf dem Display die Case Temperatur der RTC
 
-  if(hintergrund == 1){
+  if(!displaybeleuchtung)
+    return;
 
-    lcd.setCursor(0, 3);
-    lcd.print(F("Case:"));
-    lcd.print(RTC.temperature() / 4);
-    lcd.print((char) 223);
-    lcd.print(F("C"));
-
-  }
+  lcd.setCursor(0, 3);
+  lcd.print(F("Case:"));
+  lcd.print(RTC.temperature() / 4);
+  lcd.print((char) 223);
+  lcd.print(F("C"));
 
 }
 
@@ -464,56 +460,55 @@ void LTI(){ // die Funtion des Rohrventilators
 
 void gy30(){ // Luxmeter
   
-  if(hintergrund == 1){
+  if(!displaybeleuchtung)
+    return;
 
-    byte buff[2];
-    float valf = 0;
+  byte buff[2];
+  float valf = 0;
     
-    if(BH1750_Read(BH1750_address, buff) == 2){
+  if(BH1750_Read(BH1750_address, buff) == 2){
       
-      valf = ((buff[0] << 8) | buff[1]);
+    valf = ((buff[0] << 8) | buff[1]);
 
-      lcd.setCursor(0, 2);
-      lcd.print(F("LUX: "));
+    lcd.setCursor(0, 2);
+    lcd.print(F("LUX: "));
       
-      if(valf < 1000)
-        lcd.print(" ");
+    if(valf < 1000)
+      lcd.print(" ");
       
-      if(valf < 100)
-        lcd.print(" ");
+    if(valf < 100)
+      lcd.print(" ");
       
-      if(valf < 10)
-        lcd.print(" ");
+    if(valf < 10)
+      lcd.print(" ");
 
-      lcd.print(valf, 2);
+    lcd.print(valf, 2);
      
-    }
-    
   }
-  
+    
 }
 
-void displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
+bool displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
+
+  static bool hintergrund;
 
   // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
   if(debounce.read() == LOW)
-    hintergrund++; // LCD Seite wird um +1 erhöht
+    hintergrund = !hintergrund; // LCD Seite wird um +1 erhöht
 
-  if(hintergrund == 1){ // display ist an
+  if(hintergrund){ // display ist an
 
     lcd.display();
     lcd.setBacklight(255);
 
-  } else if(hintergrund == 2){ // display ist ganz aus
+  } else {
     
     lcd.setBacklight(0);
     lcd.noDisplay();
     
-  } else if(hintergrund == 3){ // setzt die Funtion wieder auf anfang
-    
-    hintergrund = 1;
-
   }
+
+  return hintergrund;
   
 }
 
@@ -698,6 +693,8 @@ void loop(){
 
   rotating = true;  // reset the debouncer
 
+  static unsigned int lastReportedPos;
+
   if(lastReportedPos != encoderPos)
     lastReportedPos = encoderPos;
 
@@ -844,7 +841,6 @@ void loop(){
   } // Lichtmodus Ende
 
   // Autobewaesserung
-
   if(setings_a.autowasser == 1){
   } // Autobewaesserung Ende
 
@@ -1172,6 +1168,7 @@ void Screen4(uint8_t &screen, unsigned long &screenBlock){
 }
 
 void Screen5(uint8_t &screen, unsigned long &screenBlock){
+
     lcd.setCursor(0, 0);
     lcd.print(F("eingest. LTI Werte"));
     lcd.setCursor(0, 1);
@@ -1210,7 +1207,7 @@ void Screen5(uint8_t &screen, unsigned long &screenBlock){
 
 void Screen6(uint8_t &screen, unsigned long &screenBlock){
     
-    screen = 10; // geht wieder auf seite 1 zurück
+    screen = 1; // geht wieder auf seite 1 zurück
   
 }
 
@@ -1676,7 +1673,7 @@ void Screen10(uint8_t &screen, unsigned long &screenBlock){
     lcd.print(F("RTC einstellen?"));
     lcd.setCursor(0, 1);
 
-    const char jein[2][5] = {"nein", "ja"};
+    const char *jein[] = {"nein", "ja"};
     lcd.print(jein[encoderPos]);
 
     if(debounce3.read() == LOW){
@@ -1916,7 +1913,7 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
       
       lcd.setCursor(0, 0);
 
-      const char c_dayOfWeek[7][11]={ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"};
+      const char *c_dayOfWeek[] = { "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"};
       lcd.print(c_dayOfWeek[encoderPos]);
  
       lcd.setCursor(0, 1);
@@ -1996,17 +1993,9 @@ void Screen13(uint8_t &screen, unsigned long &screenBlock){
     lcd.setCursor(0, 1);
     lcd.print(F("einstellen?"));
     lcd.setCursor(0, 2);
-    
-    switch(encoderPos){
 
-      case 0:
-        lcd.print("nein");
-        break;
-      case 1:
-        lcd.print("ja  ");
-        break;
-        
-    }
+    const char *jein[] = {"nein", "ja"};
+    lcd.print(jein[encoderPos]);
 
     if(debounce3.read() == LOW){
       
