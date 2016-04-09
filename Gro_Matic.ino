@@ -155,9 +155,6 @@ bool save_EEPROM  = false;
 //Displayfunktionen
 byte hintergrund = 1;    // schalte dispaly an menue
 
-// Ab hier LCD menue fuehrung und taster
-byte screen = 1;
-
 // Encoder
 volatile unsigned int encoderPos = 0;  // Encoder counter
 volatile bool rotating  = false;
@@ -840,6 +837,7 @@ void loop(){
 void Screens(){
 
   debounce3.update();
+  static uint8_t screen;
   
   if(debounce3.read() == LOW){
     
@@ -849,45 +847,45 @@ void Screens(){
   }
 
   if(screen == 1)
-    Screen1();
+    Screen1(screen);
   else if(screen == 2)
-    Screen2();
+    Screen2(screen);
   else if(screen == 3)
-    Screen3();
+    Screen3(screen);
   else if(screen == 4)
-    Screen4();
+    Screen4(screen);
   else if(screen == 5)
-    Screen5();
+    Screen5(screen);
   else if(screen == 6)
-    Screen6();
+    Screen6(screen);
   else if(screen == 7)
-    Screen7();
+    Screen7(screen);
   else if(screen == 8)
-    Screen8();
+    Screen8(screen);
   else if(screen == 9)
-    Screen9();
+    Screen9(screen);
   else if(screen == 10)
-    Screen10();
+    Screen10(screen);
   else if(screen == 11)
-    Screen11();
+    Screen11(screen);
   else if(screen == 12)
-    Screen12();
+    Screen12(screen);
   else if(screen == 13)
-    Screen13();
+    Screen13(screen);
   else if(screen == 14)
-    Screen14();
+    Screen14(screen);
   else if(screen == 15)
-    Screen15();
+    Screen15(screen);
   else if(screen == 16)
-    Screen16();
+    Screen16(screen);
   else if(screen == 17)
-    Screen17();
+    Screen17(screen);
   else if(screen == 18)
-    Screen18();
+    Screen18(screen);
 
 }
 
-void Screen1(){
+void Screen1(uint8_t &screen){
 
     static bool relay_bloom_switching;
     static bool relay_lsr_switching;
@@ -1013,7 +1011,7 @@ void Screen1(){
 
 }
 
-void Screen2(){
+void Screen2(uint8_t &screen){
 
     static uint8_t letztertag;
     static uint8_t letztermonat;
@@ -1057,7 +1055,7 @@ void Screen2(){
   
 }
 
-void Screen3(){
+void Screen3(uint8_t &screen){
     
     // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
     if(debounce3.read() == LOW){
@@ -1111,7 +1109,7 @@ void Screen3(){
   
 }
 
-void Screen4(){
+void Screen4(uint8_t &screen){
   
     lcd.setCursor(0, 0);
     lcd.print(F("Schaltzeiten Licht"));
@@ -1144,7 +1142,7 @@ void Screen4(){
     
 }
 
-void Screen5(){
+void Screen5(uint8_t &screen){
     lcd.setCursor(0, 0);
     lcd.print(F("eingest. LTI Werte"));
     lcd.setCursor(0, 1);
@@ -1181,13 +1179,13 @@ void Screen5(){
   
 }
 
-void Screen6(){
+void Screen6(uint8_t &screen){
     
     screen = 10; // geht wieder auf seite 1 zurück
   
 }
 
-void Screen7(){
+void Screen7(uint8_t &screen){
 
     static uint8_t anaus;
     
@@ -1428,7 +1426,7 @@ void Screen7(){
 
 }
 
-void Screen8(){
+void Screen8(uint8_t &screen){
 
     if(encoderPos >= 29){
       
@@ -1535,7 +1533,7 @@ void Screen8(){
   
 }
 
-void Screen9(){
+void Screen9(uint8_t &screen){
 
     if(encoderPos >= 71){
       
@@ -1632,7 +1630,7 @@ void Screen9(){
       
 }
 
-void Screen10(){
+void Screen10(uint8_t &screen){
   
     if(encoderPos > 1){
       
@@ -1664,13 +1662,13 @@ void Screen10(){
   
 }
 
-void Screen11(){
+void Screen11(uint8_t &screen){
   
      screen = 1;
 
 }
 
-void Screen12(){
+void Screen12(uint8_t &screen){
 
     static uint8_t zeitstellen;
     // Variable (struct) zum einstellen der RTC
@@ -1949,7 +1947,7 @@ void Screen12(){
   
 }
 
-void Screen13(){
+void Screen13(uint8_t &screen){
   
     if(encoderPos > 1){
       
@@ -1997,7 +1995,7 @@ void Screen13(){
   
 }
 
-void Screen14(){
+void Screen14(uint8_t &screen){
 
     if(encoderPos == 24)
       encoderPos = 0;
@@ -2031,7 +2029,7 @@ void Screen14(){
   
 }
 
-void Screen15(){
+void Screen15(uint8_t &screen){
     
     if(encoderPos == 60){
       
@@ -2065,7 +2063,7 @@ void Screen15(){
   
 }
 
-void Screen16(){
+void Screen16(uint8_t &screen){
 
       if(encoderPos == 60){
       
@@ -2099,7 +2097,7 @@ void Screen16(){
 
 }
 
-void Screen17(){
+void Screen17(uint8_t &screen){
 
     if(encoderPos == 60){
       
@@ -2133,7 +2131,7 @@ void Screen17(){
   
 }
 
-void Screen18(){
+void Screen18(uint8_t &screen){
 
     lcd.setCursor(0, 0);
     lcd.print(F("Startzeit:"));
