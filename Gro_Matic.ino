@@ -836,21 +836,11 @@ void loop(){
 
 void Screens(){
 
-  if(!displaybeleuchtung())
-    return;
-
   static unsigned long screenBlock;
   static uint8_t screen;
 
-  if(millis() < screenBlock + millis()){
-    
+  if(!displaybeleuchtung() || millis() < screenBlock + millis())
     return;
-
-  } else {
-
-    screenBlock = 0;
-    
-  }
 
   if(debounce3.read() == LOW){
     
