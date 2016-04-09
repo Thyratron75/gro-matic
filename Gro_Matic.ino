@@ -476,9 +476,6 @@ void gy30(){ // Luxmeter
 
 void displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
 
-  // Update the Bounce instance
-  debounce.update();
-
   // Wenn Taster gedrückt wurde die gewählte entprellZeit vergangen ist soll Lichtmodi und gespeichert werden ...
   if(debounce.read() == LOW)
     hintergrund++; // LCD Seite wird um +1 erhöht
@@ -669,8 +666,14 @@ void setup(){
 
 void loop(){
 
+  // Alarm tasks.
   Alarm.delay(0);
-  
+
+  // Debounce buttons.
+  debounce.update();
+  debounce2.update();
+  debounce3.update();
+
   //********************************************************************
   LTI();  // ruft die einfache LTI steuerung auf und prueft Temp und RLF und schaltet den Stufentrafo zwischen zwei Stufen.
   displaybeleuchtung();
@@ -680,10 +683,7 @@ void loop(){
 
   if(lastReportedPos != encoderPos)
     lastReportedPos = encoderPos;
-
-  // ab hier Taster des Encoders
-  debounce2.update();
-
+  
   //***********************************************
 
   if(setings_a.lichtmodus == LSR){
@@ -843,8 +843,6 @@ void Screens(){
 
   if(millis() + screenBlock > millis())
     return;
-
-  debounce3.update();
 
   if(debounce3.read() == LOW){
     
