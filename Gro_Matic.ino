@@ -490,12 +490,13 @@ bool displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
   }
 
   if(m == 0)
-    return;
+    return true;
 
   if(hintergrund && once){ // display ist an
 
     lcd.display();
     lcd.setBacklight(255);
+    m = millis();
 
   } else if(once){
 
