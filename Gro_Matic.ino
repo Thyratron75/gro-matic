@@ -155,7 +155,6 @@ bool save_EEPROM  = false;
 
 // Encoder
 volatile unsigned int encoderPos = 0;  // Encoder counter
-//volatile bool rotating  = false;
 volatile bool A_set     = false;
 volatile bool B_set     = false;
 
@@ -496,7 +495,7 @@ bool displaybeleuchtung(bool t){
 
   }
 
-  if(m < millis() && s){ // timer match...
+  if(m <= millis() && s){ // timer match...
 
     hintergrund = false;  // set display off.
     once        = true;   // run...
@@ -556,11 +555,6 @@ void doEncoderA(){
 
   displaybeleuchtung(true); // update display timeout...
 
-  /* delay wont work here see: https://www.arduino.cc/en/Reference/AttachInterrupt
-  if(rotating)
-    delay(1);  // debounce für Encoder Pin A
-  */
-
   if(digitalRead(encoderPinA) != A_set){ // debounce erneut
     
     A_set = !A_set;
@@ -568,8 +562,6 @@ void doEncoderA(){
     // stelle counter + 1 im Uhrzeigersinn
     if( A_set && !B_set)
       encoderPos += 1;
-      
-//    rotating = false;
     
   }
   
@@ -579,11 +571,6 @@ void doEncoderB(){
 
   displaybeleuchtung(true); // update display timeout...
 
-  /* delay wont work here see: https://www.arduino.cc/en/Reference/AttachInterrupt
-  if(rotating)
-    delay(1);
-  */
-
   if(digitalRead(encoderPinB) != B_set){
     
     B_set = !B_set;
@@ -591,8 +578,6 @@ void doEncoderB(){
     //  stelle counter - 1 gegen Uhrzeigersinn
     if( B_set && !A_set )
       encoderPos -= 1;
-      
-//    rotating = false;
     
   }
   
@@ -724,8 +709,6 @@ void loop(){
   Alarm.delay(0);
 
   LTI();  // ruft die einfache LTI steuerung auf und prueft Temp und RLF und schaltet den Stufentrafo zwischen zwei Stufen.
-
-//  rotating = true;  // reset the debouncer
 
   static unsigned int lastReportedPos;
 
@@ -888,10 +871,10 @@ void Screens(){
   static unsigned long screenBlock;
   static uint8_t screen;
 
-  if(!displaybeleuchtung(false) || millis() < screenBlock + millis())
+  if(!displaybeleuchtung(false) || (millis() <= screenBlock + millis() && screenBlock != 0))
     return;
 
-//  screenBlock = 0;
+  screenBlock = 0;
 
   debounce2.update();
   if(debounce2.fell() || screen == 0){
