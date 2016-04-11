@@ -482,10 +482,10 @@ bool displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
 
   debounce.update();
   if(debounce.fell()){
-    
+
     hintergrund = !hintergrund;
     once = true;
-    m = millis();
+    m = millis() + 1000*60;
 
   }
 
@@ -496,13 +496,13 @@ bool displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
 
     lcd.display();
     lcd.setBacklight(255);
-    m = millis();
+    m = millis() + 1000*60;
 
   } else if(once){
 
     lcd.setBacklight(0);
     lcd.noDisplay();
-    
+
   }
 
   once = false;
