@@ -485,14 +485,17 @@ bool displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
     
     hintergrund = !hintergrund;
     once = true;
+    m = millis();
 
   }
 
-  if(hintergrund && once || m == 0){ // display ist an
+  if(m == 0)
+    return;
+
+  if(hintergrund && once){ // display ist an
 
     lcd.display();
     lcd.setBacklight(255);
-    m = millis();
 
   } else if(once){
 
@@ -857,14 +860,14 @@ void Screens(){
 //  screenBlock = 0;
 
   debounce2.update();
-  if(debounce2.fell()){
+  if(debounce2.fell() || screen == 0){
 
     screen++;
     lcd.clear();
     
   }
 
-  if(screen == 1 || screen == 0)
+  if(screen == 1)
     Screen1(screen, screenBlock);
   else if(screen == 2)
     Screen2(screen, screenBlock);
