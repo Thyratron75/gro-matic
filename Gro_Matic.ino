@@ -478,10 +478,9 @@ bool displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
 
   static bool hintergrund;
   static bool once;
-  static m;
+  static unsigned long m;
 
   debounce.update();
-  
   if(debounce.fell()){
     
     hintergrund = !hintergrund;
@@ -489,10 +488,11 @@ bool displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
 
   }
 
-  if(hintergrund && once){ // display ist an
+  if(hintergrund && once || m == 0){ // display ist an
 
     lcd.display();
     lcd.setBacklight(255);
+    m = millis();
 
   } else if(once){
 
