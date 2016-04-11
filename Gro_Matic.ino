@@ -661,14 +661,14 @@ void setup(){
 
   // Backlight toogle.
   debounce.attach(BUTTON_PIN);
-  debounce.interval(500); // interval in ms
+  debounce.interval(5); // interval in ms
 
   // switch screen.
   debounce2.attach(screenPin);
-  debounce2.interval(500);
+  debounce2.interval(5);
 
   debounce3.attach(wechslertPin);
-  debounce3.interval(500);
+  debounce3.interval(5);
 
   attachInterrupt(0, doEncoderA, CHANGE); // Encoder pin an interrupt 0 (pin 2)
   attachInterrupt(1, doEncoderB, CHANGE); // Encoder pin an interrupt 1 (pin 3)
