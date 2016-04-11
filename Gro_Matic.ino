@@ -451,33 +451,34 @@ void gy30(){ // Luxmeter
 
   byte buff[2];
   float valf = 0;
-    
+
   if(BH1750_Read(BH1750_address, buff) == 2){
-      
+
     valf = ((buff[0] << 8) | buff[1]);
 
     lcd.setCursor(0, 2);
     lcd.print(F("LUX: "));
-      
+
     if(valf < 1000)
       lcd.print(" ");
-      
+
     if(valf < 100)
       lcd.print(" ");
-      
+
     if(valf < 10)
       lcd.print(" ");
 
     lcd.print(valf, 2);
-     
+
   }
-    
+
 }
 
 bool displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
 
   static bool hintergrund;
   static bool once;
+  static m;
 
   debounce.update();
   
@@ -485,7 +486,7 @@ bool displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
     
     hintergrund = !hintergrund;
     once = true;
-    
+
   }
 
   if(hintergrund && once){ // display ist an
@@ -580,7 +581,7 @@ void readEEPROM(){
     setings_b = setings_a; // Überschreibe default setings_b mit custom a
 
   }
-  
+
 }
 
 void updateEEPROM(){
@@ -632,21 +633,21 @@ void setup(){
 
   SplashScreen();
 
-  digitalWrite(licht_relay_p, HIGH);  // alle Relais Pins beim Start auf HIGH setzen und damit ausschalten.
+  digitalWrite(licht_relay_p, HIGH);    // alle Relais Pins beim Start auf HIGH setzen und damit ausschalten.
   digitalWrite(lsr_relay_p, HIGH);
   digitalWrite(luft_relay, HIGH);
   digitalWrite(ventilator, HIGH);
   digitalWrite(irrigation, HIGH);
 
-  pinMode(luft_relay,  OUTPUT);  // alle Relais Pins als ausgang setzen
+  pinMode(luft_relay,  OUTPUT);         // alle Relais Pins als ausgang setzen
   pinMode(licht_relay_p,  OUTPUT);
   pinMode(lsr_relay_p,  OUTPUT);
   pinMode(ventilator, OUTPUT);
   pinMode(irrigation, OUTPUT);
   
-  pinMode(BUTTON_PIN, INPUT_PULLUP);  // den backlight Taster als Input setzen
+  pinMode(BUTTON_PIN, INPUT_PULLUP);    // den backlight Taster als Input setzen
   pinMode(wechslertPin, INPUT_PULLUP);  // Modus-Taster Pin wird als Eingang gesetzt
-  pinMode(screenPin, INPUT_PULLUP);  // Modus-Taster Pin wird als Eingang gesetzt
+  pinMode(screenPin, INPUT_PULLUP);     // Modus-Taster Pin wird als Eingang gesetzt
   
   pinMode(encoderPinA, INPUT);
   pinMode(encoderPinB, INPUT);
@@ -658,7 +659,7 @@ void setup(){
   debounce.attach(BUTTON_PIN);
   debounce.interval(500); // interval in ms
 
-  // sweitch screen.
+  // switch screen.
   debounce2.attach(screenPin);
   debounce2.interval(500);
 
@@ -849,7 +850,7 @@ void Screens(){
 
   static unsigned long screenBlock;
   static uint8_t screen;
-  
+
   if(!displaybeleuchtung() || millis() < screenBlock + millis())
     return;
 
@@ -863,7 +864,7 @@ void Screens(){
     
   }
 
-  if(screen == 1)
+  if(screen == 1 || screen == 0)
     Screen1(screen, screenBlock);
   else if(screen == 2)
     Screen2(screen, screenBlock);
@@ -1079,7 +1080,7 @@ void Screen3(uint8_t &screen, unsigned long &screenBlock){
       
       setings_a.autowasser++;
       write_EEPROM++;
-      
+
     }
 
     //*************************************Programm-Modis**************************************
