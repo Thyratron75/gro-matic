@@ -155,7 +155,6 @@ bool save_EEPROM  = false;
 
 // Encoder
 volatile unsigned int encoderPos = 0;  // Encoder counter
-volatile bool rotating  = false;
 volatile bool A_set     = false;
 volatile bool B_set     = false;
 
@@ -474,34 +473,57 @@ void gy30(){ // Luxmeter
 
 }
 
-bool displaybeleuchtung(){ // hier wird das Display ein und ausgeschaltet
+#define DISPLAY_TIMEOUT 30 // sekunden
+bool displaybeleuchtung(bool t){
 
   static bool hintergrund;
   static bool once;
   static unsigned long m;
+  static bool s; // start/stop timeout.
+
+  if(m == 0 || t){ // timer reset.
+
+    m           = millis() + 1000 * DISPLAY_TIMEOUT; // Aktualiesiere timer.
+    s           = true; // start timer.
+
+    if(!hintergrund){
+      
+      hintergrund = true; // set display on.
+      once        = true; // run...
+
+    }
+
+  }
+
+  if(m <= millis() && s){ // timer match...
+
+    hintergrund = false;  // set display off.
+    once        = true;   // run...
+
+  }
 
   debounce.update();
   if(debounce.fell()){
 
     hintergrund = !hintergrund;
     once = true;
-    m = millis() + 1000*60;
 
   }
-
-  if(m == 0)
-    return true;
 
   if(hintergrund && once){ // display ist an
 
     lcd.display();
     lcd.setBacklight(255);
-    m = millis() + 1000*60;
+
+    m = millis() + 1000 * DISPLAY_TIMEOUT; // update timer
+    s = true; // start timer.
 
   } else if(once){
 
     lcd.setBacklight(0);
     lcd.noDisplay();
+
+    s = false; // stop timer
 
   }
 
@@ -515,7 +537,7 @@ void tagec(){ // bluete Tagecounter
 
   bool relay_switching = digitalRead(licht_relay_p);
   static bool last_relay_state;
-  
+
   if(relay_switching != last_relay_state){
     
     if(relay_switching == LOW)
@@ -531,9 +553,8 @@ void tagec(){ // bluete Tagecounter
 
 void doEncoderA(){
 
-  if(rotating)
-    delay(1);  // debounce für Encoder Pin A
-    
+  displaybeleuchtung(true); // update display timeout...
+
   if(digitalRead(encoderPinA) != A_set){ // debounce erneut
     
     A_set = !A_set;
@@ -541,18 +562,15 @@ void doEncoderA(){
     // stelle counter + 1 im Uhrzeigersinn
     if( A_set && !B_set)
       encoderPos += 1;
-      
-    rotating = false;
     
   }
   
 }
 
 void doEncoderB(){
-  
-  if(rotating)
-    delay(1);
-    
+
+  displaybeleuchtung(true); // update display timeout...
+
   if(digitalRead(encoderPinB) != B_set){
     
     B_set = !B_set;
@@ -560,8 +578,6 @@ void doEncoderB(){
     //  stelle counter - 1 gegen Uhrzeigersinn
     if( B_set && !A_set )
       encoderPos -= 1;
-      
-    rotating = false;
     
   }
   
@@ -607,6 +623,8 @@ void updateEEPROM(){
 }
 
 void SplashScreen(){
+
+  displaybeleuchtung(true); // set display timeout (30 sec.)
 
   lcd.setCursor(0, 0);
   lcd.print(F("..:: Gro-Matic ::.."));
@@ -691,8 +709,6 @@ void loop(){
   Alarm.delay(0);
 
   LTI();  // ruft die einfache LTI steuerung auf und prueft Temp und RLF und schaltet den Stufentrafo zwischen zwei Stufen.
-
-  rotating = true;  // reset the debouncer
 
   static unsigned int lastReportedPos;
 
@@ -855,16 +871,17 @@ void Screens(){
   static unsigned long screenBlock;
   static uint8_t screen;
 
-  if(!displaybeleuchtung() || millis() < screenBlock + millis())
+  if(!displaybeleuchtung(false) || (millis() <= screenBlock + millis() && screenBlock != 0))
     return;
 
-//  screenBlock = 0;
+  screenBlock = 0;
 
   debounce2.update();
   if(debounce2.fell() || screen == 0){
 
     screen++;
     lcd.clear();
+    displaybeleuchtung(true); // update display timeout.
     
   }
 
@@ -921,6 +938,8 @@ void Screen1(uint8_t &screen, unsigned long &screenBlock){
     
     debounce3.update();
     if(debounce3.fell()){
+
+      displaybeleuchtung(true); // update display timeout...
       
       setings_a.lichtmodus++;  // lichtmodus wird um +1 erhöht
       write_EEPROM++;
@@ -1040,6 +1059,8 @@ void Screen2(uint8_t &screen, unsigned long &screenBlock){
     
     debounce3.update();
     if(debounce3.fell()){
+
+      displaybeleuchtung(true); // update display timeout...
       
       for(int i = 0; i < 512; i++)
         EEPROM.write(i, 0);
@@ -1081,6 +1102,8 @@ void Screen3(uint8_t &screen, unsigned long &screenBlock){
 
     debounce3.update();
     if(debounce3.fell()){
+
+      displaybeleuchtung(true); // update display timeout...
       
       setings_a.autowasser++;
       write_EEPROM++;
@@ -1156,7 +1179,9 @@ void Screen4(uint8_t &screen, unsigned long &screenBlock){
 
     debounce3.update();
     if(debounce3.fell()){
-      
+
+      displaybeleuchtung(true); // update display timeout...
+
       lcd.clear();
       screenBlock = 50;
       screen = 7;
@@ -1193,6 +1218,8 @@ void Screen5(uint8_t &screen, unsigned long &screenBlock){
 
     debounce3.update();
     if(debounce3.fell()){
+
+      displaybeleuchtung(true); // update display timeout...
       
       lcd.clear();
       screenBlock = 200;
@@ -1248,7 +1275,8 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
-        
+
+        displaybeleuchtung(true); // update display timeout...
         setings_a.lsr_an = encoderPos;
         write_EEPROM++;
         lcd.clear();
@@ -1281,6 +1309,8 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
+
+        displaybeleuchtung(true); // update display timeout...
         
         if(encoderPos == 0){
           
@@ -1324,6 +1354,8 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
+
+        displaybeleuchtung(true); // update display timeout...
         
         setings_a.grow_licht_an = encoderPos;
         write_EEPROM++;
@@ -1357,6 +1389,8 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
+
+        displaybeleuchtung(true); // update display timeout...
         
         if(encoderPos == 0){
           
@@ -1400,6 +1434,8 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
+
+        displaybeleuchtung(true); // update display timeout...
         
         setings_a.bloom_licht_an = encoderPos;
         write_EEPROM++;
@@ -1433,6 +1469,8 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.read()){
+
+        displaybeleuchtung(true); // update display timeout...
         
         if(encoderPos == 0){
           
@@ -1493,6 +1531,8 @@ void Screen8(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
+
+        displaybeleuchtung(true); // update display timeout...
         
         setings_a.lsr_temp = encoderPos;
         write_EEPROM++;
@@ -1524,6 +1564,8 @@ void Screen8(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
+
+        displaybeleuchtung(true); // update display timeout...
         
         setings_a.grow_temp = encoderPos;
         write_EEPROM++;
@@ -1555,7 +1597,9 @@ void Screen8(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
-
+        
+        displaybeleuchtung(true); // update display timeout...
+        
         setings_a.bloom_temp = encoderPos;
         write_EEPROM++;
         lcd.clear();
@@ -1595,6 +1639,8 @@ void Screen9(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
+
+        displaybeleuchtung(true); // update display timeout...
         
         setings_a.lsr_rlf = (double) encoderPos;
         write_EEPROM++;
@@ -1620,6 +1666,8 @@ void Screen9(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
+
+        displaybeleuchtung(true); // update display timeout...
         
         setings_a.grow_rlf = (double) encoderPos;
         write_EEPROM++;
@@ -1647,6 +1695,8 @@ void Screen9(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
+
+        displaybeleuchtung(true); // update display timeout...
         
         setings_a.bloom_rlf = (double) encoderPos;
         write_EEPROM++;
@@ -1689,6 +1739,8 @@ void Screen10(uint8_t &screen, unsigned long &screenBlock){
 
     debounce3.update();
     if(debounce3.fell()){
+
+      displaybeleuchtung(true); // update display timeout...
       
       if(encoderPos == 0)
         screen = 13;
@@ -1744,6 +1796,8 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
+
+        displaybeleuchtung(true); // update display timeout...
         
         tm.Day = encoderPos;
         lcd.clear();
@@ -1786,6 +1840,8 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
+
+        displaybeleuchtung(true); // update display timeout...
         
         tm.Month = encoderPos;
         lcd.clear();
@@ -1830,6 +1886,8 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
       debounce3.update();
       if(debounce3.fell()){
 
+        displaybeleuchtung(true); // update display timeout...
+        
         tm.Year = 2000 + encoderPos;
         lcd.clear();
         zeitstellen++;
@@ -1874,6 +1932,8 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
       debounce3.update();
       if(debounce3.fell()){
 
+        displaybeleuchtung(true); // update display timeout...
+
         tm.Hour = encoderPos;
         lcd.clear();
         zeitstellen++;
@@ -1917,6 +1977,8 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
+
+        displaybeleuchtung(true); // update display timeout...
 
         tm.Minute = encoderPos;
         lcd.clear();
@@ -1976,6 +2038,8 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
 
       debounce3.update();
       if(debounce3.fell()){
+
+        displaybeleuchtung(true); // update display timeout...
         
         // Set RTC time.
         RTC.write(tm);
@@ -2017,6 +2081,8 @@ void Screen13(uint8_t &screen, unsigned long &screenBlock){
 
     debounce3.update();
     if(debounce3.fell()){
+
+      displaybeleuchtung(true); // update display timeout...
       
       if(encoderPos == 0)
         screen = 1;
@@ -2056,6 +2122,8 @@ void Screen14(uint8_t &screen, unsigned long &screenBlock){
 
     debounce3.update();
     if(debounce3.fell()){
+
+      displaybeleuchtung(true); // update display timeout...
       
       setings_a.startwasser = encoderPos;
       write_EEPROM++;
@@ -2092,6 +2160,8 @@ void Screen15(uint8_t &screen, unsigned long &screenBlock){
 
     debounce3.update();
     if(debounce3.fell()){
+
+      displaybeleuchtung(true); // update display timeout...
       
       setings_a.startwassermin = encoderPos;
       write_EEPROM++;
@@ -2127,6 +2197,8 @@ void Screen16(uint8_t &screen, unsigned long &screenBlock){
 
     debounce3.update();
     if(debounce3.fell()){
+
+      displaybeleuchtung(true); // update display timeout...
       
       setings_a.auswasser = encoderPos;
       write_EEPROM++;
@@ -2162,6 +2234,8 @@ void Screen17(uint8_t &screen, unsigned long &screenBlock){
 
     debounce3.update();
     if(debounce3.fell()){
+
+      displaybeleuchtung(true); // update display timeout...
 
       setings_a.sekauswasser = encoderPos;
       write_EEPROM++;
@@ -2212,6 +2286,8 @@ void Screen18(uint8_t &screen, unsigned long &screenBlock){
 
     debounce3.update();
     if(debounce3.fell()){
+
+      displaybeleuchtung(true); // update display timeout...
 
       asm volatile ("jmp 0");
       
