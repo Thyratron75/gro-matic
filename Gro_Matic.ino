@@ -646,7 +646,7 @@ void setup(){
   bme.begin();
   
   setSyncProvider(RTC.get);   // Function to get the time from RTC
-  setSyncInterval(60000*5); // (5 Minuten)
+  setSyncInterval((time_t)60*1000*5); // (5 Minuten)
 
   BH1750_Init(BH1750_address);
   Alarm.delay(500);
