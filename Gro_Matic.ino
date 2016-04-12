@@ -218,7 +218,7 @@ byte BH1750_Read(int address, byte *buff){
 }
 
 /*
-#define PRINTF_BUFFER 20 
+#define PRINTF_BUFFER 21 
 void p(char *fmt, ...){
   
   char buf[PRINTF_BUFFER]; // resulting string limited to 128 chars
@@ -599,14 +599,13 @@ void readEEPROM(){
 
 }
 
-
 void updateEEPROM(){
 
   if(write_EEPROM && save_EEPROM){
 
     setings_t setings_b;
 
-    if(memcmp(&setings, &setings_b, sizeof setings) != 0){ // Do noting if noting to do
+    if(memcmp(&setings, &setings_b, sizeof(setings)) != 0){ // Do noting if noting to do
 
       EEPROM.put(0, setings);
 
