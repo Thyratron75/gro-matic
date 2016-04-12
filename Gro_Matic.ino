@@ -107,12 +107,12 @@
 enum { LSR, GROW, BLOOM };
 
 /* Wenn MAGIC_NUMBER im EEPROM nicht übereinstimmt wird das EEPROM mit den default einstellungen neu geschreiben */
-const uint32_t MAGIC_NUMBER = 0xAAEBCCDF;
+const uint32_t MAGIC_NUMBER = 0xAAEBCEDF;
 
 /* Structure hält default einstellungen! diese werden von EEPROM überschrieben oder werden geschrieben falls noch nicht gesetzt */
 struct setings_t {
 
-  uint32_t MAGIC_NUMBER   = MAGIC_NUMBER;
+  uint32_t magic_number   = MAGIC_NUMBER;
 
   byte lichtmodus     = LSR;   // Speichern des gewählten Lichtmodus einstellen (enumeration)
   bool autowasse      = false; // Autobewasserung, on false = disabled
@@ -254,12 +254,12 @@ void p(const __FlashStringHelper *fmt, ...){
 */
 
 void displayTime(){ // anzeige der Zeit und Datum auf dem Display
-  
+
   lcd.setCursor(0, 0);
-    
+
   if(hour() < 10)
     lcd.print("0");
- 
+
   lcd.print(hour(), DEC);
 
   lcd.print(":");
@@ -279,15 +279,15 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
 
   const char *c_dayOfWeek[] = {"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
   lcd.print(c_dayOfWeek[weekday(now()) -1]);
- 
+
   lcd.print(" ");
-    
+
   if(day() < 10)
     lcd.print("0");
 
   lcd.print(day(), DEC);
   lcd.print(" ");
- 
+
   const char *c_Month[] = {"Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"};
   lcd.print(c_Month[month() -1]);
 
@@ -302,7 +302,7 @@ double temp(){
     
     t = bme.readTemperature();
     m = millis();
-    
+
   }
 
   return t;
@@ -581,19 +581,23 @@ void doEncoderB(){
   
 }
 
-/* Lese EEPROM in setings oder schreibe defaults in EEPROM */
-void readEEPROM(){
+/* Read or intialy write setings and retrun*/
+setings_t readEEPROM(){
 
-  /* Lese EEPROM structure in speicher*/
-  EEPROM.get(0, setings);
+  setings_t s;
 
-  if(setings.MAGIC_NUMBER != MAGIC_NUMBER ){ // Vergleiche Magic number wenn ungleich schreibe EEPROM mit defaults neu.
+  EEPROM.get(0, s);
 
-    Serial.println("write defaults!");
+  if(MAGIC_NUMBER != s.magic_number){ // Verify Magic number.
 
-    EEPROM.put(0, setings); // Schreibe settings_b, enthält default einstellungen.
+    setings_t ss;
+    s = ss;
+
+    EEPROM.put(0, ss); // write defaults to eeprom.
 
   }
+
+  return s;
 
 }
 
@@ -634,14 +638,14 @@ void SplashScreen(){
 void setup(){
 
   Serial.begin(9600);
-  Serial.println(sizeof(setings));
 
-  /* Lese EEPROM in setings oder schreibe defaults in EEPROM */
-  readEEPROM();
+  /* Read in eeprom setings */
+  setings = readEEPROM();
+
   Wire.begin();
   lcd.begin(20, 4); // stelle LCD groesse ein
   bme.begin();
-  
+
   setSyncProvider(RTC.get);   // Function to get the time from RTC
   setSyncInterval((time_t)60*1000*5); // (5 Minuten)
 
