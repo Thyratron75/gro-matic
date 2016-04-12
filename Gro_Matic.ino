@@ -75,8 +75,6 @@
 // GY-30 Lux Meter
 #define BH1750_address 0x23  // I2C Addresse des GY-30
 
-#define entprellZeit 500  // Zeit für Entprellung, anpassen!
-
 //Backlight button
 #define BUTTON_PIN 10
 
