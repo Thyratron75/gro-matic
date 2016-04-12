@@ -125,11 +125,11 @@ struct setings_t {
 
 /* Ab hier Zeit für die Belichtungsmodis einstellen */
   byte lsr_an           = 5;     // Startzeit des LSR Modis
-  byte lsr_aus          = 22;    // Endzeit des LSR Modis
+  byte lsr_aus          = 23;    // Endzeit des LSR Modis
   byte grow_licht_an    = 5;     // Startzeit des Grow Modis
-  byte grow_licht_aus   = 22;    // Endzeit des Grow Modis
-  byte bloom_licht_an   = 5;     // Startzeit des Bloom Modis
-  byte bloom_licht_aus  = 16;    // Endzeit des Grow Modis
+  byte grow_licht_aus   = 23;    // Endzeit des Grow Modis
+  byte bloom_licht_an   = 7;     // Startzeit des Bloom Modis
+  byte bloom_licht_aus  = 19;    // Endzeit des Grow Modis
  
 /* Temperaturwerte für LTI, ab erreichen der Temperaturen in den verschiedenen Licht Modis soll LTI in die hoechste Stufe geschaltet werden. */
   double lsr_temp   = 24.00; // Temp im LSR Modi
@@ -150,7 +150,7 @@ struct setings_t {
 
 } setings_a, setings_b; // wenn sich structure a von b unterscheidet && write_EEPROM == true dann schreibe EEPROM neu...
 
-byte write_EEPROM = false; // false = 0;
+byte write_EEPROM = true; // false = 0;
 bool save_EEPROM  = false;
 
 // Encoder
@@ -629,9 +629,9 @@ void SplashScreen(){
   lcd.setCursor(0, 0);
   lcd.print(F("..:: Gro-Matic ::.."));
   lcd.setCursor(0, 2);
-  lcd.print(F("  BME-280 Edition"));
+  lcd.print(F(" Community Edition"));
   lcd.setCursor(0, 3);
-  lcd.print(F(" V. 0.9.9.9 by zrox"));
+  lcd.print(F("     V. 0.9.9.9"));
   Alarm.delay(3000);
   lcd.clear();
   
@@ -648,7 +648,7 @@ void setup(){
   bme.begin();
   
   setSyncProvider(RTC.get);   // Function to get the time from RTC
-  setSyncInterval(1000*60*5); // (5 Minuten)
+  setSyncInterval(60000*5); // (5 Minuten)
 
   BH1750_Init(BH1750_address);
   Alarm.delay(500);
@@ -686,7 +686,7 @@ void setup(){
   debounce2.interval(5);
 
   debounce3.attach(wechslertPin);
-  debounce3.interval(5);
+  debounce3.interval(7);
 
   attachInterrupt(0, doEncoderA, CHANGE); // Encoder pin an interrupt 0 (pin 2)
   attachInterrupt(1, doEncoderB, CHANGE); // Encoder pin an interrupt 1 (pin 3)
@@ -822,7 +822,7 @@ void loop(){
 
     if((hour() >= setings_a.bloom_licht_an) && (hour() < setings_a.bloom_licht_aus)){
       
-      digitalWrite(licht_relay_p, LOW); //schaltet ndl im Bloom modus 12h licht um 5 Uhr an und um 16:59:59 Uhr aus
+      digitalWrite(licht_relay_p, LOW); //schaltet ndl im Bloom modus 12h licht um 5 Uhr an und um 16:00:00 Uhr aus
       digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
 
       // Umluftventilator alle 15 minuten einschalten wenn licht an
@@ -1183,7 +1183,7 @@ void Screen4(uint8_t &screen, unsigned long &screenBlock){
       displaybeleuchtung(true); // update display timeout...
 
       lcd.clear();
-      screenBlock = 50;
+      //screenBlock = 50;
       screen = 7;
       
     }
@@ -1222,7 +1222,7 @@ void Screen5(uint8_t &screen, unsigned long &screenBlock){
       displaybeleuchtung(true); // update display timeout...
       
       lcd.clear();
-      screenBlock = 200;
+      //screenBlock = 200;
       temp_bereich = 0;
       rlf_bereich = 0;
       screen = 8;
@@ -1233,7 +1233,7 @@ void Screen5(uint8_t &screen, unsigned long &screenBlock){
 
 void Screen6(uint8_t &screen, unsigned long &screenBlock){
     
-    screen = 1; // geht wieder auf seite 1 zurück
+    screen = 10; // geht weiter zu Seite 10 
   
 }
 
@@ -1468,7 +1468,7 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
       lcd.print(F("Dauer 12 Stunden"));
 
       debounce3.update();
-      if(debounce3.read()){
+      if(debounce3.fell()){
 
         displaybeleuchtung(true); // update display timeout...
         
@@ -1485,9 +1485,9 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
         
         write_EEPROM++;
         lcd.clear();
-        screenBlock = 100;
-        anaus = 0;
+        //screenBlock = 100;
         screen = 4;
+        anaus = 0;
         
       }
       
