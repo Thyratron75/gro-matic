@@ -75,8 +75,6 @@
 // GY-30 Lux Meter
 #define BH1750_address 0x23  // I2C Addresse des GY-30
 
-#define entprellZeit 500  // Zeit für Entprellung, anpassen!
-
 //Backlight button
 #define BUTTON_PIN 10
 
@@ -109,12 +107,12 @@
 enum { LSR, GROW, BLOOM };
 
 /* Wenn MAGIC_NUMBER im EEPROM nicht übereinstimmt wird das EEPROM mit den default einstellungen neu geschreiben */
-const uint32_t MAGIC_NUMBER = 0xAAEBCCDF;
+const uint32_t MAGIC_NUMBER = 0xAAEBCEDF;
 
 /* Structure hält default einstellungen! diese werden von EEPROM überschrieben oder werden geschrieben falls noch nicht gesetzt */
 struct setings_t {
 
-  uint32_t MAGIC_NUMBER   = MAGIC_NUMBER;
+  uint32_t magic_number   = MAGIC_NUMBER;
 
   byte lichtmodus     = LSR;   // Speichern des gewählten Lichtmodus einstellen (enumeration)
   bool autowasse      = false; // Autobewasserung, on false = disabled
@@ -148,7 +146,7 @@ struct setings_t {
   byte startwassermin = 0;
   byte sekauswasser   = 0;
 
-} setings_a, setings_b; // wenn sich structure a von b unterscheidet && write_EEPROM == true dann schreibe EEPROM neu...
+} setings;
 
 byte write_EEPROM = true; // false = 0;
 bool save_EEPROM  = false;
@@ -218,7 +216,7 @@ byte BH1750_Read(int address, byte *buff){
 }
 
 /*
-#define PRINTF_BUFFER 20 
+#define PRINTF_BUFFER 21 
 void p(char *fmt, ...){
   
   char buf[PRINTF_BUFFER]; // resulting string limited to 128 chars
@@ -256,12 +254,12 @@ void p(const __FlashStringHelper *fmt, ...){
 */
 
 void displayTime(){ // anzeige der Zeit und Datum auf dem Display
-  
+
   lcd.setCursor(0, 0);
-    
+
   if(hour() < 10)
     lcd.print("0");
- 
+
   lcd.print(hour(), DEC);
 
   lcd.print(":");
@@ -281,15 +279,15 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
 
   const char *c_dayOfWeek[] = {"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
   lcd.print(c_dayOfWeek[weekday(now()) -1]);
- 
+
   lcd.print(" ");
-    
+
   if(day() < 10)
     lcd.print("0");
 
   lcd.print(day(), DEC);
   lcd.print(" ");
- 
+
   const char *c_Month[] = {"Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"};
   lcd.print(c_Month[month() -1]);
 
@@ -304,7 +302,7 @@ double temp(){
     
     t = bme.readTemperature();
     m = millis();
-    
+
   }
 
   return t;
@@ -369,12 +367,12 @@ void LTI(){ // die Funtion des Rohrventilators
   // bleibt Stufentrafo gedimmt (z.B. 80V)
   // ist Temp oder gleich oder höher wird auf hoechste stufe (z.B. 190V) geschaltet.
   
-  if(setings_a.lichtmodus == LSR){ 
+  if(setings.lichtmodus == LSR){ 
     
-    if(temp() < setings_a.lsr_temp)
+    if(temp() < setings.lsr_temp)
       digitalWrite(luft_relay, LOW);
 
-    if(hum() < setings_a.lsr_rlf){
+    if(hum() < setings.lsr_rlf){
       
       digitalWrite(luft_relay, LOW);
     
@@ -389,12 +387,12 @@ void LTI(){ // die Funtion des Rohrventilators
   // Pruefe im LSR oder Grow Modus Temperatur und RLF ist die Temp unter 24 Grad C oder unter RLF unter 55%
   // bleibt Stufentrafo gedimmt (z.B. 80V)
   // ist Temp oder gleich oder höher wird auf hoechste stufe (z.B. 190V) geschaltet.
-  if(setings_a.lichtmodus == GROW){ 
+  if(setings.lichtmodus == GROW){ 
     
-    if(temp() < setings_a.grow_temp)
+    if(temp() < setings.grow_temp)
       digitalWrite(luft_relay, LOW);
     
-    if(hum() < setings_a.grow_rlf){
+    if(hum() < setings.grow_rlf){
       
       digitalWrite(luft_relay, LOW);
       
@@ -407,12 +405,12 @@ void LTI(){ // die Funtion des Rohrventilators
   }
 
   // Pruefe im Uebergangsmodus Grow>Bloom Temperatur und RLF
-  if(setings_a.lichtmodus == BLOOM){
+  if(setings.lichtmodus == BLOOM){
     
-    if(temp() < setings_a.grow_temp)
+    if(temp() < setings.grow_temp)
       digitalWrite(luft_relay, LOW);
     
-    if(hum() < setings_a.grow_rlf){
+    if(hum() < setings.grow_rlf){
       
       digitalWrite(luft_relay, LOW);
       
@@ -427,12 +425,12 @@ void LTI(){ // die Funtion des Rohrventilators
   // Pruefe im Bloom Modus Temperatur und RLF ist die Temp unter 22 Grad C oder unter RLF unter 40%
   // bleibt Stufentrafo gedimmt (z.B. 80V)
   // ist Temp oder RLF gleich oder höher wird auf hoechste stufe (z.B. 190V) geschaltet.
-  if(setings_a.lichtmodus == BLOOM){
+  if(setings.lichtmodus == BLOOM){
     
-    if(temp() < setings_a.bloom_temp)
+    if(temp() < setings.bloom_temp)
       digitalWrite(luft_relay, LOW);
  
-    if(hum() < setings_a.bloom_rlf){
+    if(hum() < setings.bloom_rlf){
       
       digitalWrite(luft_relay, LOW);
       
@@ -541,7 +539,7 @@ void tagec(){ // bluete Tagecounter
   if(relay_switching != last_relay_state){
     
     if(relay_switching == LOW)
-      setings_a.bloom_counter++;
+      setings.bloom_counter++;
       
     write_EEPROM++;
     
@@ -583,24 +581,23 @@ void doEncoderB(){
   
 }
 
-/* Lese EEPROM in setings oder schreibe defaults in EEPROM */
-void readEEPROM(){
+/* Read or intialy write setings and retrun*/
+setings_t readEEPROM(){
 
-  /* Lese EEPROM structure in speicher*/
-  EEPROM.get(0, setings_a);
+  setings_t s;
 
-  if(setings_a.MAGIC_NUMBER != MAGIC_NUMBER ){ // Vergleiche Magic number wenn ungleich schreibe EEPROM mit defaults neu.
+  EEPROM.get(0, s);
 
-    Serial.println("write defaults!");
+  if(MAGIC_NUMBER != s.magic_number){ // Verify Magic number.
 
-    setings_a = setings_b; // settings_a ist b (defaults)
-    EEPROM.put(0, setings_b); // Schreibe settings_b, enthält default einstellungen.
+    setings_t ss;
+    s = ss;
 
-  } else {
-
-    setings_b = setings_a; // Überschreibe default setings_b mit custom a
+    EEPROM.put(0, ss); // write defaults to eeprom.
 
   }
+
+  return s;
 
 }
 
@@ -608,15 +605,16 @@ void updateEEPROM(){
 
   if(write_EEPROM && save_EEPROM){
 
-    if(memcmp(&setings_a, &setings_b, sizeof setings_a) != 0){ // Do noting if noting to do
+    setings_t setings_b;
 
-      EEPROM.put(0, setings_a);
-      setings_b = setings_a;
+    if(memcmp(&setings, &setings_b, sizeof(setings)) != 0){ // Do noting if noting to do
+
+      EEPROM.put(0, setings);
 
     }
 
-    write_EEPROM = false;
-    save_EEPROM = write_EEPROM;
+    write_EEPROM  = false;
+    save_EEPROM   = false;
 
   }
 
@@ -634,21 +632,22 @@ void SplashScreen(){
   lcd.print(F("     V. 0.9.9.9"));
   Alarm.delay(3000);
   lcd.clear();
-  
+
 }
 
 void setup(){
 
   Serial.begin(9600);
 
-  /* Lese EEPROM in setings oder schreibe defaults in EEPROM */
-  readEEPROM();
+  /* Read in eeprom setings */
+  setings = readEEPROM();
+
   Wire.begin();
   lcd.begin(20, 4); // stelle LCD groesse ein
   bme.begin();
-  
+
   setSyncProvider(RTC.get);   // Function to get the time from RTC
-  setSyncInterval(60000*5); // (5 Minuten)
+  setSyncInterval((time_t)60*1000*5); // (5 Minuten)
 
   BH1750_Init(BH1750_address);
   Alarm.delay(500);
@@ -717,9 +716,9 @@ void loop(){
 
   //***********************************************
 
-  if(setings_a.lichtmodus == LSR){
+  if(setings.lichtmodus == LSR){
 
-    if((hour() >= setings_a.lsr_an) && (hour() < setings_a.lsr_aus)){
+    if((hour() >= setings.lsr_an) && (hour() < setings.lsr_aus)){
       
       digitalWrite(lsr_relay_p, LOW); //schaltet lsr um 5 Uhr an und um 22:59:59 Uhr aus
       digitalWrite(licht_relay_p, HIGH); //schaltet ndl Relais aus sollten sie noch an sein
@@ -739,7 +738,7 @@ void loop(){
       
       digitalWrite(lsr_relay_p, HIGH);
       
-      if((hour() >= setings_a.grow_licht_aus) & (hour() < setings_a.grow_licht_an) || (hour() >= setings_a.bloom_licht_aus) & (hour() <= setings_a.bloom_licht_an))
+      if((hour() >= setings.grow_licht_aus) & (hour() < setings.grow_licht_an) || (hour() >= setings.bloom_licht_aus) & (hour() <= setings.bloom_licht_an))
         digitalWrite(licht_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
       
       if((minute() >= 15) && (minute() <= 19)){ // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
@@ -747,16 +746,16 @@ void loop(){
         digitalWrite(ventilator, LOW);
         
       } else {
-        
+
         digitalWrite(ventilator, HIGH);
         
       }
       
     }
 
-  } else if(setings_a.lichtmodus == GROW){
+  } else if(setings.lichtmodus == GROW){
 
-    if((hour() >= setings_a.grow_licht_an) && (hour() < setings_a.grow_licht_aus)){ 
+    if((hour() >= setings.grow_licht_an) && (hour() < setings.grow_licht_aus)){ 
       
       digitalWrite(licht_relay_p, LOW); //schaltet ndl im Grow modus 18h licht um 5 Uhr an und um 22:59:59 Uhr aus
       digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
@@ -776,7 +775,7 @@ void loop(){
       
       digitalWrite(licht_relay_p, HIGH);
       
-      if((hour() >= setings_a.lsr_aus) & (hour() < setings_a.lsr_an))
+      if((hour() >= setings.lsr_aus) & (hour() < setings.lsr_an))
         digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
       
       if((minute() >= 15) && (minute() <= 19)){ // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
@@ -791,9 +790,9 @@ void loop(){
       
     }
 
-  } else if(setings_a.lichtmodus == BLOOM){
+  } else if(setings.lichtmodus == BLOOM){
 
-    if((hour() >= setings_a.grow_licht_an) && (hour() < setings_a.grow_licht_aus)){
+    if((hour() >= setings.grow_licht_an) && (hour() < setings.grow_licht_aus)){
       
       digitalWrite(licht_relay_p, LOW); //schaltet ndl im Grow modus 18h licht um 5 Uhr an und um 22:59:59 Uhr aus
       digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
@@ -811,16 +810,16 @@ void loop(){
       
     } else { 
       
-      setings_a.lichtmodus = BLOOM;
+      setings.lichtmodus = BLOOM;
       write_EEPROM++;
       
     }
     
-  } else if(setings_a.lichtmodus == BLOOM){
+  } else if(setings.lichtmodus == BLOOM){
     
     tagec();
 
-    if((hour() >= setings_a.bloom_licht_an) && (hour() < setings_a.bloom_licht_aus)){
+    if((hour() >= setings.bloom_licht_an) && (hour() < setings.bloom_licht_aus)){
       
       digitalWrite(licht_relay_p, LOW); //schaltet ndl im Bloom modus 12h licht um 5 Uhr an und um 16:00:00 Uhr aus
       digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
@@ -840,7 +839,7 @@ void loop(){
       
       digitalWrite(licht_relay_p, HIGH);
       
-      if((hour() >= setings_a.grow_licht_aus) & (hour() < setings_a.grow_licht_an) || (hour() >= setings_a.lsr_aus) & (hour() < setings_a.lsr_an) )
+      if((hour() >= setings.grow_licht_aus) & (hour() < setings.grow_licht_an) || (hour() >= setings.lsr_aus) & (hour() < setings.lsr_an) )
         digitalWrite(lsr_relay_p, HIGH);  //schaltet lsr Relais aus sollten sie noch an sein
       
       if((minute() >= 15) && (minute() <= 19)){ // schaltet Ventilator im Nachtmodus 1 x jede Stunde fuer 5 Min. an
@@ -858,11 +857,11 @@ void loop(){
   } // Lichtmodus Ende
 
   // Autobewaesserung
-  if(setings_a.autowasser == 1){
+  if(setings.autowasser == 1){
   } // Autobewaesserung Ende
 
   Screens();
-  updateEEPROM();
+  //updateEEPROM();
 
 }
 
@@ -941,7 +940,7 @@ void Screen1(uint8_t &screen, unsigned long &screenBlock){
 
       displaybeleuchtung(true); // update display timeout...
       
-      setings_a.lichtmodus++;  // lichtmodus wird um +1 erhöht
+      setings.lichtmodus++;  // lichtmodus wird um +1 erhöht
       write_EEPROM++;
     
     }
@@ -984,7 +983,7 @@ void Screen1(uint8_t &screen, unsigned long &screenBlock){
     //*************************************Programm-Modis**************************************
 
     // Wenn Lichtmodus 0 ist, starte im LSR modus
-    if(setings_a.lichtmodus == LSR){
+    if(setings.lichtmodus == LSR){
       
       lcd.setCursor(10, 3);
       lcd.print(F("  LSR Mode"));
@@ -1004,7 +1003,7 @@ void Screen1(uint8_t &screen, unsigned long &screenBlock){
       
       }
       
-    } else if(setings_a.lichtmodus == GROW){
+    } else if(setings.lichtmodus == GROW){
       
       lcd.setCursor(10, 3);
       lcd.print(F(" Grow Mode"));
@@ -1024,7 +1023,7 @@ void Screen1(uint8_t &screen, unsigned long &screenBlock){
         
       }
       
-    } else if(setings_a.lichtmodus == BLOOM){
+    } else if(setings.lichtmodus == BLOOM){
       
       lcd.setCursor(10, 3);
       lcd.print(F("Bloom Mode"));
@@ -1046,7 +1045,7 @@ void Screen1(uint8_t &screen, unsigned long &screenBlock){
       
     } else { // Wenn der Lichtmodus auf 3 springt, setzte ihn wieder zurück auf 0 um von vorne zu beginnen
 
-      setings_a.lichtmodus = LSR;
+      setings.lichtmodus = LSR;
       
     } // Lichtmodus Ende
 
@@ -1086,7 +1085,7 @@ void Screen2(uint8_t &screen, unsigned long &screenBlock){
     lcd.print(F("Bl"));
     lcd.print((char)0xF5);
     lcd.print(F("tetag:"));
-    lcd.print(setings_a.bloom_counter);
+    lcd.print(setings.bloom_counter);
     lcd.setCursor(0, 2);
     lcd.print(F("dr"));
     lcd.print((char)0xF5);
@@ -1105,7 +1104,7 @@ void Screen3(uint8_t &screen, unsigned long &screenBlock){
 
       displaybeleuchtung(true); // update display timeout...
       
-      setings_a.autowasser++;
+      setings.autowasser++;
       write_EEPROM++;
 
     }
@@ -1113,7 +1112,7 @@ void Screen3(uint8_t &screen, unsigned long &screenBlock){
     //*************************************Programm-Modis**************************************
 
     // Wenn Lichtmodus 0 ist, starte im LSR modus
-    if(setings_a.autowasser == true){
+    if(setings.autowasser == true){
       
       lcd.setCursor(0, 2);
       lcd.print(F("Autobew"));
@@ -1123,7 +1122,7 @@ void Screen3(uint8_t &screen, unsigned long &screenBlock){
       lcd.write(WATER_OFF);
       lcd.print(F(" aus"));
       
-    } else if(setings_a.autowasser == false){
+    } else if(setings.autowasser == false){
       
       lcd.setCursor(0, 2);
       lcd.print(F("Autobew"));
@@ -1135,7 +1134,7 @@ void Screen3(uint8_t &screen, unsigned long &screenBlock){
       
     } else {
       
-      setings_a.autowasser = true;
+      setings.autowasser = true;
       
     } // Autobewaesserung Ende
 
@@ -1160,21 +1159,21 @@ void Screen4(uint8_t &screen, unsigned long &screenBlock){
     lcd.print(F("Schaltzeiten Licht"));
     lcd.setCursor(0, 1);
     lcd.print(F("LSR:  "));
-    lcd.print(setings_a.lsr_an);
+    lcd.print(setings.lsr_an);
     lcd.print(F(":00-"));
-    lcd.print(setings_a.lsr_aus);
+    lcd.print(setings.lsr_aus);
     lcd.print(F(":00 Uhr"));
     lcd.setCursor(0, 2);
     lcd.print(F("Grow: "));
-    lcd.print(setings_a.grow_licht_an);
+    lcd.print(setings.grow_licht_an);
     lcd.print(F(":00-"));
-    lcd.print(setings_a.grow_licht_aus);
+    lcd.print(setings.grow_licht_aus);
     lcd.print(F(":00 Uhr"));
     lcd.setCursor(0, 3);
     lcd.print(F("Bloom:"));
-    lcd.print(setings_a.bloom_licht_an);
+    lcd.print(setings.bloom_licht_an);
     lcd.print(F(":00-"));
-    lcd.print(setings_a.bloom_licht_aus);
+    lcd.print(setings.bloom_licht_aus);
     lcd.print(F(":00 Uhr"));
 
     debounce3.update();
@@ -1196,24 +1195,24 @@ void Screen5(uint8_t &screen, unsigned long &screenBlock){
     lcd.print(F("eingest. LTI Werte"));
     lcd.setCursor(0, 1);
     lcd.print(F("LSR:  "));
-    lcd.print(setings_a.lsr_temp);
+    lcd.print(setings.lsr_temp);
     lcd.print((char)223);
     lcd.print(F("C:"));
-    lcd.print(setings_a.lsr_rlf);
+    lcd.print(setings.lsr_rlf);
     lcd.print(F("%"));
     lcd.setCursor(0, 2);
     lcd.print(F("Grow: "));
-    lcd.print(setings_a.grow_temp);
+    lcd.print(setings.grow_temp);
     lcd.print((char)223);
     lcd.print(F("C:"));
-    lcd.print(setings_a.grow_rlf);
+    lcd.print(setings.grow_rlf);
     lcd.print(F("%"));
     lcd.setCursor(0, 3);
     lcd.print(F("Bloom:"));
-    lcd.print(setings_a.bloom_temp);
+    lcd.print(setings.bloom_temp);
     lcd.print((char)223);
     lcd.print(F("C:"));
-    lcd.print(setings_a.bloom_rlf);
+    lcd.print(setings.bloom_rlf);
     lcd.print(F("%"));
 
     debounce3.update();
@@ -1277,7 +1276,7 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
       if(debounce3.fell()){
 
         displaybeleuchtung(true); // update display timeout...
-        setings_a.lsr_an = encoderPos;
+        setings.lsr_an = encoderPos;
         write_EEPROM++;
         lcd.clear();
         anaus++;
@@ -1315,11 +1314,11 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
         if(encoderPos == 0){
           
           encoderPos = 23;
-          setings_a.lsr_aus = encoderPos;
+          setings.lsr_aus = encoderPos;
           
         } else {
           
-          setings_a.lsr_aus = encoderPos;
+          setings.lsr_aus = encoderPos;
         
         }
 
@@ -1357,7 +1356,7 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
 
         displaybeleuchtung(true); // update display timeout...
         
-        setings_a.grow_licht_an = encoderPos;
+        setings.grow_licht_an = encoderPos;
         write_EEPROM++;
         lcd.clear();
         anaus++;
@@ -1395,11 +1394,11 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
         if(encoderPos == 0){
           
           encoderPos = 23;
-          setings_a.grow_licht_aus = encoderPos;
+          setings.grow_licht_aus = encoderPos;
         
         } else {
           
-          setings_a.grow_licht_aus = encoderPos;
+          setings.grow_licht_aus = encoderPos;
           
         }
         
@@ -1437,7 +1436,7 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
 
         displaybeleuchtung(true); // update display timeout...
         
-        setings_a.bloom_licht_an = encoderPos;
+        setings.bloom_licht_an = encoderPos;
         write_EEPROM++;
         lcd.clear();
         anaus++;
@@ -1475,11 +1474,11 @@ void Screen7(uint8_t &screen, unsigned long &screenBlock){
         if(encoderPos == 0){
           
           encoderPos = 23;
-          setings_a.bloom_licht_aus = encoderPos;
+          setings.bloom_licht_aus = encoderPos;
           
         } else {
           
-          setings_a.bloom_licht_aus = encoderPos;
+          setings.bloom_licht_aus = encoderPos;
           
         }
         
@@ -1534,7 +1533,7 @@ void Screen8(uint8_t &screen, unsigned long &screenBlock){
 
         displaybeleuchtung(true); // update display timeout...
         
-        setings_a.lsr_temp = encoderPos;
+        setings.lsr_temp = encoderPos;
         write_EEPROM++;
         lcd.clear();
         temp_bereich++;
@@ -1567,7 +1566,7 @@ void Screen8(uint8_t &screen, unsigned long &screenBlock){
 
         displaybeleuchtung(true); // update display timeout...
         
-        setings_a.grow_temp = encoderPos;
+        setings.grow_temp = encoderPos;
         write_EEPROM++;
         lcd.clear();
         temp_bereich++;
@@ -1600,7 +1599,7 @@ void Screen8(uint8_t &screen, unsigned long &screenBlock){
         
         displaybeleuchtung(true); // update display timeout...
         
-        setings_a.bloom_temp = encoderPos;
+        setings.bloom_temp = encoderPos;
         write_EEPROM++;
         lcd.clear();
         screen = 9;
@@ -1642,7 +1641,7 @@ void Screen9(uint8_t &screen, unsigned long &screenBlock){
 
         displaybeleuchtung(true); // update display timeout...
         
-        setings_a.lsr_rlf = (double) encoderPos;
+        setings.lsr_rlf = (double) encoderPos;
         write_EEPROM++;
         lcd.clear();
         rlf_bereich++;
@@ -1669,7 +1668,7 @@ void Screen9(uint8_t &screen, unsigned long &screenBlock){
 
         displaybeleuchtung(true); // update display timeout...
         
-        setings_a.grow_rlf = (double) encoderPos;
+        setings.grow_rlf = (double) encoderPos;
         write_EEPROM++;
         lcd.clear();
         rlf_bereich++;
@@ -1698,7 +1697,7 @@ void Screen9(uint8_t &screen, unsigned long &screenBlock){
 
         displaybeleuchtung(true); // update display timeout...
         
-        setings_a.bloom_rlf = (double) encoderPos;
+        setings.bloom_rlf = (double) encoderPos;
         write_EEPROM++;
         lcd.clear();
         rlf_bereich++;
@@ -2125,7 +2124,7 @@ void Screen14(uint8_t &screen, unsigned long &screenBlock){
 
       displaybeleuchtung(true); // update display timeout...
       
-      setings_a.startwasser = encoderPos;
+      setings.startwasser = encoderPos;
       write_EEPROM++;
       lcd.clear();
       screen = 15;
@@ -2163,7 +2162,7 @@ void Screen15(uint8_t &screen, unsigned long &screenBlock){
 
       displaybeleuchtung(true); // update display timeout...
       
-      setings_a.startwassermin = encoderPos;
+      setings.startwassermin = encoderPos;
       write_EEPROM++;
       lcd.clear();
       screen = 16;
@@ -2200,7 +2199,7 @@ void Screen16(uint8_t &screen, unsigned long &screenBlock){
 
       displaybeleuchtung(true); // update display timeout...
       
-      setings_a.auswasser = encoderPos;
+      setings.auswasser = encoderPos;
       write_EEPROM++;
       lcd.clear();
       screen = 17;
@@ -2237,7 +2236,7 @@ void Screen17(uint8_t &screen, unsigned long &screenBlock){
 
       displaybeleuchtung(true); // update display timeout...
 
-      setings_a.sekauswasser = encoderPos;
+      setings.sekauswasser = encoderPos;
       write_EEPROM++;
       lcd.clear();
       screen = 18;
@@ -2252,37 +2251,37 @@ void Screen18(uint8_t &screen, unsigned long &screenBlock){
     lcd.print(F("Startzeit:"));
     lcd.setCursor(0, 1);
     
-    if(setings_a.startwasser < 10)
+    if(setings.startwasser < 10)
       lcd.print("0");
 
-    lcd.print(setings_a.startwasser);
+    lcd.print(setings.startwasser);
     lcd.print(":");
 
-    if(setings_a.startwassermin < 10)
+    if(setings.startwassermin < 10)
       lcd.print("0");
 
-    lcd.print(setings_a.startwassermin);
+    lcd.print(setings.startwassermin);
     lcd.print(":00 Uhr");
     lcd.setCursor(0, 2);
     lcd.print(F("Ende:"));
     lcd.setCursor(0, 3);
 
-    if(setings_a.startwasser < 10)
+    if(setings.startwasser < 10)
       lcd.print("0");
 
-    lcd.print(setings_a.startwasser);
+    lcd.print(setings.startwasser);
     lcd.print(":");
 
-    if(setings_a.auswasser < 10)
+    if(setings.auswasser < 10)
       lcd.print("0");
 
-    lcd.print(setings_a.auswasser);
+    lcd.print(setings.auswasser);
     lcd.print(":");
 
-    if(setings_a.sekauswasser < 10)
+    if(setings.sekauswasser < 10)
       lcd.print("0");
 
-    lcd.print(setings_a.sekauswasser);
+    lcd.print(setings.sekauswasser);
 
     debounce3.update();
     if(debounce3.fell()){
