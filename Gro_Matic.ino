@@ -140,12 +140,13 @@ struct setings_t {
   double bloom_rlf  = 40.00;  // RLF im Bloom Modi
 
 /* Autobewaesserung */
+/*
   byte autowasser     = 0;
   byte startwasser    = 7;
   byte auswasser      = 5;
   byte startwassermin = 0;
   byte sekauswasser   = 0;
-
+*/
 } setings;
 
 byte write_EEPROM = true; // false = 0;
@@ -856,9 +857,11 @@ void loop(){
 
   } // Lichtmodus Ende
 
+/*
   // Autobewaesserung
   if(setings.autowasser == 1){
   } // Autobewaesserung Ende
+*/
 
   Screens();
   //updateEEPROM();
@@ -888,8 +891,8 @@ void Screens(){
     Screen1(screen, screenBlock);
   else if(screen == 2)
     Screen2(screen, screenBlock);
-  else if(screen == 3)
-    Screen3(screen, screenBlock);
+/*  else if(screen == 3)
+    Screen3(screen, screenBlock); */
   else if(screen == 4)
     Screen4(screen, screenBlock);
   else if(screen == 5)
@@ -910,16 +913,16 @@ void Screens(){
     Screen12(screen, screenBlock);
   else if(screen == 13)
     Screen13(screen, screenBlock);
-  else if(screen == 14)
-    Screen14(screen, screenBlock);
-  else if(screen == 15)
-    Screen15(screen, screenBlock);
-  else if(screen == 16)
-    Screen16(screen, screenBlock);
-  else if(screen == 17)
-    Screen17(screen, screenBlock);
-  else if(screen == 18)
-    Screen18(screen, screenBlock);
+/*  else if(screen == 14)
+    Screen14(screen, screenBlock); */
+/*  else if(screen == 15)
+    Screen15(screen, screenBlock); */
+/*  else if(screen == 16)
+    Screen16(screen, screenBlock); */
+/*  else if(screen == 17)
+    Screen17(screen, screenBlock); */
+/*  else if(screen == 18)
+    Screen18(screen, screenBlock); */
 
 }
 
@@ -1097,6 +1100,7 @@ void Screen2(uint8_t &screen, unsigned long &screenBlock){
   
 }
 
+/*
 void Screen3(uint8_t &screen, unsigned long &screenBlock){
 
     debounce3.update();
@@ -1152,6 +1156,7 @@ void Screen3(uint8_t &screen, unsigned long &screenBlock){
     lcd.print(F("C "));
   
 }
+*/
 
 void Screen4(uint8_t &screen, unsigned long &screenBlock){
   
@@ -2097,6 +2102,7 @@ void Screen13(uint8_t &screen, unsigned long &screenBlock){
   
 }
 
+/*
 void Screen14(uint8_t &screen, unsigned long &screenBlock){
 
     if(encoderPos == 24)
@@ -2133,7 +2139,8 @@ void Screen14(uint8_t &screen, unsigned long &screenBlock){
 
   
 }
-
+*/
+/*
 void Screen15(uint8_t &screen, unsigned long &screenBlock){
     
     if(encoderPos == 60){
@@ -2170,7 +2177,8 @@ void Screen15(uint8_t &screen, unsigned long &screenBlock){
     }
   
 }
-
+*/
+/*
 void Screen16(uint8_t &screen, unsigned long &screenBlock){
 
       if(encoderPos == 60){
@@ -2207,7 +2215,8 @@ void Screen16(uint8_t &screen, unsigned long &screenBlock){
     }
 
 }
-
+*/
+/*
 void Screen17(uint8_t &screen, unsigned long &screenBlock){
 
     if(encoderPos == 60){
@@ -2244,7 +2253,8 @@ void Screen17(uint8_t &screen, unsigned long &screenBlock){
     }
   
 }
-
+*/
+/*
 void Screen18(uint8_t &screen, unsigned long &screenBlock){
 
     lcd.setCursor(0, 0);
@@ -2293,4 +2303,4 @@ void Screen18(uint8_t &screen, unsigned long &screenBlock){
     }
 
 }
-
+*/
