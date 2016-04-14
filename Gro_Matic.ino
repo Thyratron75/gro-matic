@@ -107,7 +107,7 @@
 enum { LSR, GROW, BLOOM };
 
 /* Wenn MAGIC_NUMBER im EEPROM nicht übereinstimmt wird das EEPROM mit den default einstellungen neu geschreiben */
-const uint32_t MAGIC_NUMBER = 0xAAEBCEDF;
+const uint32_t MAGIC_NUMBER = 0xAAEBCDDF;
 
 /* Structure hält default einstellungen! diese werden von EEPROM überschrieben oder werden geschrieben falls noch nicht gesetzt */
 struct setings_t {
