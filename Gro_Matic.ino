@@ -66,7 +66,7 @@
 #define licht_relay_p 7   // licht_relay = zur Steuerung des Hauptleuchtmittels
 #define lsr_relay_p   6   // lsr_relay = zur Steuerung der LSR der Jungpflanzen
 #define ventilator    5   // vetilator = zur steuerung des Relais Umluftventilators
-#define irrigation    11  // wasser_relay = autobewaesserung
+//#define irrigation    11  // wasser_relay = autobewaesserung
 
 #define BACKLIGHT_PIN (3)
 
@@ -115,7 +115,7 @@ struct setings_t {
   uint32_t magic_number   = MAGIC_NUMBER;
 
   byte lichtmodus     = LSR;   // Speichern des gewählten Lichtmodus einstellen (enumeration)
-  bool autowasse      = false; // Autobewasserung, on false = disabled
+ // bool autowasse      = false; // Autobewasserung, on false = disabled
 
   byte bloom_counter  = 0;    // Speichern des bloom Tage counters.
   byte starttag       = 0;    // Speichern des Start Tages
@@ -278,10 +278,10 @@ void displayTime(){ // anzeige der Zeit und Datum auf dem Display
   lcd.print(second(), DEC);
   lcd.print(" ");
 
-  const char *c_dayOfWeek[] = {"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
-  lcd.print(c_dayOfWeek[weekday(now()) -1]);
+  //const char *c_dayOfWeek[] = {"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
+  //lcd.print(c_dayOfWeek[weekday(now()) -1]);
 
-  lcd.print(" ");
+  //lcd.print(" ");
 
   if(day() < 10)
     lcd.print("0");
@@ -659,13 +659,13 @@ void setup(){
   digitalWrite(lsr_relay_p, HIGH);
   digitalWrite(luft_relay, HIGH);
   digitalWrite(ventilator, HIGH);
-  digitalWrite(irrigation, HIGH);
+  //digitalWrite(irrigation, HIGH);
 
   pinMode(luft_relay,  OUTPUT);         // alle Relais Pins als ausgang setzen
   pinMode(licht_relay_p,  OUTPUT);
   pinMode(lsr_relay_p,  OUTPUT);
   pinMode(ventilator, OUTPUT);
-  pinMode(irrigation, OUTPUT);
+  //pinMode(irrigation, OUTPUT);
   
   pinMode(BUTTON_PIN, INPUT_PULLUP);    // den backlight Taster als Input setzen
   pinMode(wechslertPin, INPUT_PULLUP);  // Modus-Taster Pin wird als Eingang gesetzt
@@ -891,8 +891,8 @@ void Screens(){
     Screen1(screen, screenBlock);
   else if(screen == 2)
     Screen2(screen, screenBlock);
-/*  else if(screen == 3)
-    Screen3(screen, screenBlock); */
+  else if(screen == 3)
+    Screen3(screen, screenBlock);
   else if(screen == 4)
     Screen4(screen, screenBlock);
   else if(screen == 5)
@@ -911,8 +911,8 @@ void Screens(){
     Screen11(screen, screenBlock);
   else if(screen == 12)
     Screen12(screen, screenBlock);
-  else if(screen == 13)
-    Screen13(screen, screenBlock);
+/*  else if(screen == 13)
+    Screen13(screen, screenBlock); */
 /*  else if(screen == 14)
     Screen14(screen, screenBlock); */
 /*  else if(screen == 15)
@@ -1100,7 +1100,7 @@ void Screen2(uint8_t &screen, unsigned long &screenBlock){
   
 }
 
-/*
+
 void Screen3(uint8_t &screen, unsigned long &screenBlock){
 
     debounce3.update();
@@ -1108,14 +1108,14 @@ void Screen3(uint8_t &screen, unsigned long &screenBlock){
 
       displaybeleuchtung(true); // update display timeout...
       
-      setings.autowasser++;
+      //setings.autowasser++;
       write_EEPROM++;
 
     }
 
     //*************************************Programm-Modis**************************************
 
-    // Wenn Lichtmodus 0 ist, starte im LSR modus
+/*    // Wenn Lichtmodus 0 ist, starte im LSR modus
     if(setings.autowasser == true){
       
       lcd.setCursor(0, 2);
@@ -1140,7 +1140,7 @@ void Screen3(uint8_t &screen, unsigned long &screenBlock){
       
       setings.autowasser = true;
       
-    } // Autobewaesserung Ende
+    } // Autobewaesserung Ende */
 
     lcd.setCursor(0, 0);
     lcd.print(F("Boden "));
@@ -1156,7 +1156,7 @@ void Screen3(uint8_t &screen, unsigned long &screenBlock){
     lcd.print(F("C "));
   
 }
-*/
+
 
 void Screen4(uint8_t &screen, unsigned long &screenBlock){
   
@@ -1857,8 +1857,6 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
 
     if(zeitstellen == 2){
       
-      encoderPos = 16;
-      
       if(encoderPos <= 15){
         
         lcd.clear();
@@ -1892,7 +1890,7 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
 
         displaybeleuchtung(true); // update display timeout...
         
-        tm.Year = 2000 + encoderPos;
+        tm.Year = encoderPos;
         lcd.clear();
         zeitstellen++;
         
@@ -1996,8 +1994,8 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
       
       lcd.setCursor(0, 0);
 
-      const char *c_dayOfWeek[] = { "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"};
-      lcd.print(c_dayOfWeek[encoderPos]);
+      //const char *c_dayOfWeek[] = { "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"};
+      //lcd.print(c_dayOfWeek[encoderPos]);
  
       lcd.setCursor(0, 1);
       
@@ -2031,14 +2029,14 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
         
       lcd.print(tm.Month);
       lcd.print(F("."));
-      lcd.print(tm.Year);
+      lcd.print(tm.Year + 2000);
 
       lcd.setCursor(0, 2);
       lcd.print("best");
       lcd.print((char)0xE1);
-      lcd.print("tigen um Datum,");
+      lcd.print("tigen zum ");
       lcd.setCursor(0, 3);
-      lcd.print("Zeit zu setzen.");
+      lcd.print("Datum & Zeit setzen.");
 
       debounce3.update();
       if(debounce3.fell()){
@@ -2059,6 +2057,7 @@ void Screen12(uint8_t &screen, unsigned long &screenBlock){
   
 }
 
+/*
 void Screen13(uint8_t &screen, unsigned long &screenBlock){
   
     if(encoderPos > 1){
@@ -2102,7 +2101,7 @@ void Screen13(uint8_t &screen, unsigned long &screenBlock){
   
 }
 
-/*
+
 void Screen14(uint8_t &screen, unsigned long &screenBlock){
 
     if(encoderPos == 24)
